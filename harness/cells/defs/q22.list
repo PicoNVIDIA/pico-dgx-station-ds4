@@ -1,0 +1,4 @@
+# Held-out placement test, then a matched pair for the stage skip (off, on) on the default profile.
+ho1m|ho id
+sk0_1m|c1 s:2,8,32x2 id
+sk1_1m|c1 s:2,8,32x2 id

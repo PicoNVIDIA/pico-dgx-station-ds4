@@ -1,0 +1,56 @@
+# stock vLLM v0.32.0 (A) against the reference capture of the engine at 275 experts (B)
+## ident_cmp.py
+A=deepseek-v4.1-flash  B=dsv41-flash-gracetier  prompts compared 40, errors A 0 B 0
+identical outputs: 1/40; matching prefix 1753/9249 tokens (19.0 %)
+  A00: first difference at token 80 (lengths 256/256); top1-top2 margin in A 0.25; A=' amort' B=' time'
+  A02: first difference at token 6 (lengths 256/256); top1-top2 margin in A 1.0; A=' Spend' B=' Total'
+  A03: first difference at token 165 (lengths 179/179); top1-top2 margin in A 0.0; A='5' B='6'
+  A04: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.125; A='.\n\n' B='.'
+  A05: first difference at token 62 (lengths 256/256); top1-top2 margin in A 0.0; A=' change' B=' rate'
+  A06: first difference at token 1 (lengths 256/256); top1-top2 margin in A 1.5; A=' ' B=' main'
+  A07: first difference at token 23 (lengths 256/256); top1-top2 margin in A 0.625; A=' week' B=' golden'
+  A08: first difference at token 72 (lengths 169/179); top1-top2 margin in A 2.5; A=' The' B=' In'
+  A09: first difference at token 16 (lengths 231/245); top1-top2 margin in A 0.125; A=' a' B=' shrinking'
+  A10: first difference at token 1 (lengths 256/256); top1-top2 margin in A 0.25; A=' Deb' B=' JavaScript'
+  A11: first difference at token 30 (lengths 256/256); top1-top2 margin in A 1.25; A=' that' B='**'
+  A12: first difference at token 30 (lengths 256/256); top1-top2 margin in A 0.0; A=' It' B=' Inside'
+  A13: first difference at token 60 (lengths 256/256); top1-top2 margin in A 2.25; A=' the' B=' now'
+  A14: first difference at token 22 (lengths 256/256); top1-top2 margin in A 1.25; A=' costs' B=' premium'
+  A15: first difference at token 18 (lengths 141/144); top1-top2 margin in A 0.75; A=' mountain' B=' garden'
+  A16: first difference at token 52 (lengths 256/256); top1-top2 margin in A 1.25; A=' (~' B=' ('
+  A17: first difference at token 26 (lengths 27/27); top1-top2 margin in A 20.25; A='' B='<｜end▁of▁sentence｜>'
+  A18: first difference at token 20 (lengths 235/238); top1-top2 margin in A 0.0; A=' the' B=' money'
+  A19: first difference at token 2 (lengths 256/256); top1-top2 margin in A 0.25; A=' this' B=' the'
+  B00: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.25; A=' stored' B=' "'
+  B01: first difference at token 42 (lengths 256/256); top1-top2 margin in A 0.75; A='Status' B='Result'
+  B02: first difference at token 142 (lengths 256/256); top1-top2 margin in A 0.0; A=' The' B=' Coll'
+  B03: first difference at token 28 (lengths 213/217); top1-top2 margin in A 1.0; A='60' B='50'
+  B04: first difference at token 98 (lengths 256/256); top1-top2 margin in A 0.125; A=' Configuration' B=' Validate'
+  B05: first difference at token 10 (lengths 256/256); top1-top2 margin in A 0.0; A='##' B='**'
+  B06: first difference at token 4 (lengths 256/256); top1-top2 margin in A 0.25; A=' pioneered' B=' introduced'
+  B07: first difference at token 15 (lengths 256/256); top1-top2 margin in A 0.5; A=' The' B=' Is'
+  B08: first difference at token 74 (lengths 220/214); top1-top2 margin in A 0.5; A='Word' B='Difference'
+  B09: first difference at token 19 (lengths 213/242); top1-top2 margin in A 1.5; A=' the' B=' at'
+  B10: first difference at token 65 (lengths 256/256); top1-top2 margin in A 0.125; A=' ' B=' line'
+  B11: first difference at token 28 (lengths 256/256); top1-top2 margin in A 0.75; A=' imp' B=' drastically'
+  B12: first difference at token 49 (lengths 256/256); top1-top2 margin in A 0.25; A=' —' B='!'
+  B13: first difference at token 67 (lengths 171/186); top1-top2 margin in A 0.0; A=' came' B=' ultimately'
+  B14: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.0; A=' strict' B=' SQL'
+  B15: first difference at token 1 (lengths 191/150); top1-top2 margin in A 0.125; A=' hour' B=' dark'
+  B16: first difference at token 28 (lengths 256/256); top1-top2 margin in A 0.75; A=' make' B=' create'
+  B17: first difference at token 36 (lengths 37/37); top1-top2 margin in A 18.5; A='' B='<｜end▁of▁sentence｜>'
+  B18: first difference at token 10 (lengths 216/232); top1-top2 margin in A 0.75; A=' ETF' B=' exchange'
+  B19: first difference at token 14 (lengths 256/256); top1-top2 margin in A 0.25; A=' **' B=' a'
+## ident_diag.py
+prompts 40; same prompt_tokens 40/40; same visible text 3/40 ['A01', 'A17', 'B17']
+real divergences 37; first-difference position median 27, min 1, max 165
+margin (top1-top2 logprob) at the split, in A: n=37 median 0.250 max 2.500; <=0.125: 13, 0.25-0.5: 9, 0.625-1.0: 8, 1.1-2.0: 5, >2.0: 2
+margin (top1-top2 logprob) at the split, in B: n=37 median 0.375 max 4.000; <=0.125: 9, 0.25-0.5: 18, 0.625-1.0: 6, 1.1-2.0: 2, >2.0: 2
+B's runner-up is A's pick at the split: 31/37
+smallest distinct |logprob| values in A (shows the logprob grid): [0.0, 0.001, 0.002, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.011, 0.012, 0.015]
+## stock against itself (two captures)
+A=deepseek-v4.1-flash  B=deepseek-v4.1-flash  prompts compared 40, errors A 0 B 0
+identical outputs: 40/40; matching prefix 9155/9155 tokens (100.0 %)
+## the engine against itself (two captures at 275 experts)
+A=dsv41-flash-gracetier  B=dsv41-flash-gracetier  prompts compared 40, errors A 0 B 0
+identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)

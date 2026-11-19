@@ -1,0 +1,88 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-18T19:15:06+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30006",
+  "model": "deepseek-v4.1-flash",
+  "out": "/raid/work/logs/gtq4-20261118T190755Z/ctl-streams2-r1.json",
+  "env_file": null,
+  "skip": "fixed,gsm8k_c1,greedy_c1,coding,prefill,capacity,quality",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "2,4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "streams": [
+  {
+   "conc": 2,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 554.4,
+   "per_stream_tok_s": 277.2,
+   "tokens_per_step": 3.693,
+   "preemptions": 0.0,
+   "request_errors": 0
+  },
+  {
+   "conc": 4,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 787.0,
+   "per_stream_tok_s": 196.8,
+   "tokens_per_step": 3.706,
+   "preemptions": 0.0,
+   "request_errors": 0
+  },
+  {
+   "conc": 8,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 1103.6,
+   "per_stream_tok_s": 138.0,
+   "tokens_per_step": 3.067,
+   "preemptions": 0.0,
+   "request_errors": 0
+  },
+  {
+   "conc": 16,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 1477.8,
+   "per_stream_tok_s": 92.4,
+   "tokens_per_step": 3.05,
+   "preemptions": 0.0,
+   "request_errors": 0
+  },
+  {
+   "conc": 32,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 1950.7,
+   "per_stream_tok_s": 61.0,
+   "tokens_per_step": 3.063,
+   "preemptions": 0.0,
+   "request_errors": 0
+  }
+ ],
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-18T19:21:47+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

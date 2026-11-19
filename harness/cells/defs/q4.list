@@ -1,0 +1,5 @@
+# name|profile   (see station_cells.sh for the profile tokens)
+ctl|c1 s:2,4,8,16,32x2 pf id idc:8 idc:32 res:ctrl-many.json s:8,16,32x2
+s32d1|s:16,32x2 idc:32
+sd2|s:8,16,32x2 idc:8
+s4d3|c1 s:2,4x2 id idc:4

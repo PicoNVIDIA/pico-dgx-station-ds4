@@ -1,0 +1,211 @@
+start 2026-11-19T00:29:47Z
+== CELL profc  []  00:29:47
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 DS41_GT_STAGE_SKIP=1 DS41_NSYS_WRAP=1 DS41_NSYS_TAG=profc DS41_NSYS_DIR=/opt/nvidia/nsight-systems/2025.6.3 
+make_rowmap_allres: 40 layers, H=298 (per-layer [298]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-298.json, all entries >= 0, permutat
+serve.sh: K5 profile hook added (11 lines + 3 edits)
+serve.sh syntax ok
+serving at 00:36:30; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [298], G = 384, 20640 cold tensors in Grace (56.69 GiB, read 45.6 s, registered 0.22 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 926,551 tokens, Maximum concurrency for 524,288 tokens per request: 1.77x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+ds41 runs under the nsys wrap
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 1024, "profile": false, "wall_s": 2.101, "steps": 203.0, "gen_tokens": 1024.0, "tokens_per_step": 5.044, "ms_per_step_wall": 10.349, 
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 1024, "profile": true, "start_profile": [200, ""], "stop_profile": [-1, "RemoteDisconnected('Remote end closed connection without res
+Generating '/tmp/nsys-report-5288.qdstrm'
+[1/1] [0%                          ] profc.nsys-repProcessing events...
+[1/1] [0%                          ] profc.nsys-rep[1/1] [6%                          ] profc.nsys-rep[1/1] [5%                          ] profc.nsys-rep[1/1] [5%                          ] profc.
+	/prof/profc/profc.nsys-rep
+nsys export rc=0 (19M)
+table rc=0 -> /raid/work/logs/k5/profc/table.txt (101 lines)
+trace=/raid/work/logs/k5/profc/profc.sqlite
+steps=204  step_wall_median_ms=9.674  mean_ms=9.895  gpu_busy_ms=9.475 (99.1%)  sum_of_kernel_ms=11.537  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   149.1 kernels      277.0 us
+      3-6 us:   195.5 kernels      917.1 us
+     6-10 us:   119.3 kernels      942.9 us
+    10-20 us:   219.6 kernels     2502.1 us
+    20-50 us:    50.0 kernels     1581.3 us
+     >=50 us:    58.3 kernels     5364.8 us
+  under 20 us: 683.5 kernels/step, 4639.1 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3456.2    2441.0   24.7%
+moe_hot          80.0    4208.9    4055.7   41.0%
+gt_stage         40.0    1079.9     961.2    9.7%
+engram            4.0      37.4      36.5    0.4%
+drafter          88.5     781.2     567.5    5.7%
+head              2.0     417.9     417.6    4.2%
+sampler           2.0      14.8       9.2    0.1%
+other           223.3    1588.9    1032.8   10.4%
+(idle)                              373.1    3.8%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3752.6    93.8    3748.9   37.9%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0    1245.8    32.8    1188.6   12.0%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+gt_stage         40.0    1079.9    27.0     961.1    9.7%  gt_stage_skip_kernel
+attention       120.0    1117.8     9.3     580.3    5.9%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     956.8    12.1     518.0    5.2%  mix_kernel
+head              2.0     417.9   208.9     417.6    4.2%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     428.6    10.7     380.2    3.8%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     383.6     4.9     336.5    3.4%  seam_kernel
+moe_hot          40.0     456.3    11.4     306.8    3.1%  router_kernel
+drafter           3.0     124.4    41.5     124.1    1.2%  sm100_fp8_fp4_mega_moe_impl
+drafter           1.0      81.2    81.2      81.2    0.8%  markov_kernel
+other             9.0     110.2    12.2      71.7    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+attention        40.0      78.2     1.9      66.5    0.7%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      59.1    59.1      56.6    0.6%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           3.0      59.8    19.9      51.4    0.5%  attn_ss_kernel
+attention         8.0      51.0     6.4      50.2    0.5%  sm100_paged_mqa_logits
+drafter          10.0      84.1     8.4      47.6    0.5%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     245.7     5.7      46.8    0.5%  stage_kernel
+drafter           5.0      55.5    11.1      40.6    0.4%  mega_mix_kernel
+engram            2.0      29.8    14.9      29.0    0.3%  _engram_lookup_kernel
+drafter           3.0      80.6    26.9      28.8    0.3%  sm100_fp8_fp4_gemm_1d1d_impl
+attention         4.0      24.2     6.0      24.2    0.2%  _mask_candidates_kernel
+attention         4.0      20.7     5.2      20.7    0.2%  topk_global_cs8
+drafter           1.0      23.1    23.1      19.1    0.2%  mix_kernel
+attention         4.0      19.1     4.8      19.1    0.2%  _candidate_flags_kernel
+drafter          17.2      34.4     2.0      17.5    0.2%  vectorized_elementwise_kernel
+drafter           5.0      21.7     4.3      16.3    0.2%  mega_seam_kernel
+attention        12.0      82.7     6.9      14.0    0.1%  Kernel2
+other             4.0      13.4     3.4      13.4    0.1%  cooperative_topk_cs8
+drafter           1.0      17.9    17.9      12.5    0.1%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+drafter           1.0      11.6    11.6      11.6    0.1%  _match_chain_kernel
+drafter           6.0      13.5     2.2      11.3    0.1%  rms_norm_kernel
+other             2.0      10.4     5.2      10.0    0.1%  mhc_post_tilelang_kernel
+attention         4.0      21.6     5.4       9.5    0.1%  _fused_save_compress_norm_kernel
+attention         4.0       8.8     2.2       8.8    0.1%  _indexer_k_norm_rope_quant_store_kernel
+other             8.0      15.7     2.0       7.8    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+other             7.0       7.8     1.1       7.8    0.1%  vectorized_elementwise_kernel
+engram            2.0       7.5     3.8       7.5    0.1%  _fused_engram_post_wkv_kernel
+attention         4.0       7.3     1.8       7.3    0.1%  _compute_global_topk_indices_and_lens_kernel
+attention         2.0      30.4    15.2       6.9    0.1%  attn_ss_kernel
+sampler           1.0       6.3     6.3       6.3    0.1%  _rejection_kernel
+other             2.0       6.2     3.1       6.2    0.1%  _swa_decode_meta_multi_kernel
+attention         2.0       6.2     3.1       5.9    0.1%  sm100_paged_mqa_logits_metadata
+drafter           2.0       5.9     2.9       5.9    0.1%  index_elementwise_kernel
+other             3.0       5.8     1.9       5.8    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+attention         3.0      19.3     6.4       5.6    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+other             1.0       5.3     5.3       5.3    0.1%  _post_update_kernel
+drafter           1.0       5.2     5.2       5.2    0.1%  _prepare_dflash_inputs_multigroup_kernel
+drafter           3.0       5.9     2.0       5.1    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+after: , restarts 0, telemetry: {"at_boot": false, "cold": 1835, "cold_share": 0.014991830065359478, "drains": 115, "event": "drain", "freeze": false, "host_steps": 7360, "hot_moved": 1645, "pending": 40, "queued": 40, "sel": 122400, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 475
+CELL_DONE profc 00:37:56
+== CELL profg  []  00:37:56
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 DS41_GT_STAGE_SKIP=1 DS41_NSYS_WRAP=1 DS41_NSYS_TAG=profg DS41_NSYS_DIR=/opt/nvidia/nsight-systems/2025.6.3 
+make_rowmap_allres: 40 layers, H=298 (per-layer [298]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-298.json, all entries >= 0, permutat
+serve.sh: K5 profile hook already present
+serve.sh syntax ok
+serving at 00:44:47; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [298], G = 384, 20640 cold tensors in Grace (56.69 GiB, read 46.4 s, registered 0.52 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 931,747 tokens, Maximum concurrency for 524,288 tokens per request: 1.78x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+ds41 runs under the nsys wrap
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": false, "wall_s": 1.601, "steps": 191.0, "gen_tokens": 512.0, "tokens_per_step": 2.681, "ms_per_step_wall": 8.382, "to
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": true, "start_profile": [200, ""], "stop_profile": [-1, "RemoteDisconnected('Remote end closed connection without resp
+Generating '/tmp/nsys-report-e9fe.qdstrm'
+[1/1] [0%                          ] profg.nsys-repProcessing events...
+[1/1] [0%                          ] profg.nsys-rep[1/1] [6%                          ] profg.nsys-rep[1/1] [5%                          ] profg.nsys-rep[1/1] [5%                          ] profg.
+	/prof/profg/profg.nsys-rep
+nsys export rc=0 (17M)
+table rc=0 -> /raid/work/logs/k5/profg/table.txt (101 lines)
+trace=/raid/work/logs/k5/profg/profg.sqlite
+steps=184  step_wall_median_ms=8.043  mean_ms=8.129  gpu_busy_ms=7.921 (99.0%)  sum_of_kernel_ms=9.972  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   146.5 kernels      265.1 us
+      3-6 us:   203.3 kernels      920.3 us
+     6-10 us:   117.7 kernels      908.1 us
+    10-20 us:   225.0 kernels     2544.0 us
+    20-50 us:    48.5 kernels     1273.1 us
+     >=50 us:    49.4 kernels     4087.8 us
+  under 20 us: 692.5 kernels/step, 4637.5 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3169.1    2154.6   26.5%
+moe_hot          80.0    3653.5    3499.2   43.0%
+gt_stage         40.0     388.1     263.9    3.2%
+engram            4.0      32.5      32.2    0.4%
+drafter          87.2     754.9     546.3    6.7%
+head              2.0     417.6     417.4    5.1%
+sampler           2.0      13.4       9.6    0.1%
+other           223.2    1569.3    1024.6   12.6%
+(idle)                              181.4    2.2%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3204.1    80.1    3200.8   39.4%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0     972.5    25.6     927.6   11.4%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+attention       120.0    1116.1     9.3     578.5    7.1%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     949.3    12.0     521.0    6.4%  mix_kernel
+head              2.0     417.6   208.8     417.4    5.1%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     427.3    10.7     374.2    4.6%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     379.9     4.8     333.9    4.1%  seam_kernel
+moe_hot          40.0     449.5    11.2     298.4    3.7%  router_kernel
+gt_stage         40.0     388.1     9.7     263.9    3.2%  gt_stage_skip_kernel
+drafter           3.0     123.9    41.3     123.6    1.5%  sm100_fp8_fp4_mega_moe_impl
+other             9.0     111.3    12.4      73.5    0.9%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           1.0      67.7    67.7      67.7    0.8%  markov_kernel
+attention        40.0      78.0     1.9      66.4    0.8%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      57.5    57.5      55.5    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           3.0      58.4    19.5      49.9    0.6%  attn_ss_kernel
+attention         8.0      49.4     6.2      48.5    0.6%  sm100_paged_mqa_logits
+drafter          10.0      83.7     8.4      47.9    0.6%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     251.5     5.8      44.0    0.5%  stage_kernel
+drafter           5.0      55.0    11.0      40.0    0.5%  mega_mix_kernel
+drafter           3.0      79.4    26.5      28.9    0.4%  sm100_fp8_fp4_gemm_1d1d_impl
+engram            2.0      24.9    12.5      24.7    0.3%  _engram_lookup_kernel
+attention         4.0      20.8     5.2      20.8    0.3%  _mask_candidates_kernel
+drafter           1.0      23.1    23.1      19.2    0.2%  mix_kernel
+attention         4.0      19.0     4.8      19.0    0.2%  _candidate_flags_kernel
+drafter           5.0      21.9     4.4      16.5    0.2%  mega_seam_kernel
+drafter          15.5      29.8     1.9      15.1    0.2%  vectorized_elementwise_kernel
+attention        12.0      82.2     6.8      13.4    0.2%  Kernel2
+attention         4.0      12.7     3.2      12.7    0.2%  topk_global_cs8
+drafter           1.0      11.9    11.9      11.9    0.1%  _match_chain_kernel
+drafter           6.0      13.5     2.3      11.7    0.1%  rms_norm_kernel
+drafter           1.0      17.1    17.1      10.8    0.1%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+other             2.0      10.4     5.2      10.0    0.1%  mhc_post_tilelang_kernel
+other             8.0      16.3     2.0       8.7    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+attention         4.0       8.7     2.2       8.6    0.1%  _indexer_k_norm_rope_quant_store_kernel
+attention         4.0      20.1     5.0       8.0    0.1%  _fused_save_compress_norm_kernel
+other             7.0       7.9     1.1       7.9    0.1%  vectorized_elementwise_kernel
+attention         4.0       7.6     1.9       7.6    0.1%  _compute_global_topk_indices_and_lens_kernel
+engram            2.0       7.5     3.8       7.5    0.1%  _fused_engram_post_wkv_kernel
+attention         2.0      30.1    15.1       6.7    0.1%  attn_ss_kernel
+sampler           1.0       6.2     6.2       6.2    0.1%  _rejection_kernel
+attention         2.0       6.5     3.2       6.2    0.1%  sm100_paged_mqa_logits_metadata
+other             3.0       6.2     2.0       6.2    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+other             2.0       6.1     3.0       6.1    0.1%  _swa_decode_meta_multi_kernel
+attention         3.0      18.9     6.3       5.6    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+drafter           2.0       5.6     2.8       5.6    0.1%  index_elementwise_kernel
+other             4.0       5.3     1.3       5.3    0.1%  cooperative_topk_cs8
+drafter           1.0       5.3     5.3       5.3    0.1%  _prepare_dflash_inputs_multigroup_kernel
+drafter           3.0       5.9     2.0       5.1    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+drafter           1.0       5.0     5.0       5.0    0.1%  mhc_post_tilelang_kernel
+after: , restarts 0, telemetry: {"at_boot": false, "cold": 403, "cold_share": 0.0042835884353741496, "drains": 114, "event": "drain", "freeze": false, "host_steps": 7296, "hot_moved": 1651, "pending": 24, "queued": 24, "sel": 94080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 4414
+CELL_DONE profg 00:46:08
+end 2026-11-19T00:46:08Z
+DONE

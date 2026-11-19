@@ -1,0 +1,4 @@
+# Candidate finals, K6 skip on, one scratch lane. f524: 298 hot, 524K context. f1m: 291 hot, 1M. f262: 302 hot, 262K.
+f524|c1 s:2,4,8,16,32x2 pf id
+f1m|c1 s:2,4,8,16,32x2 pf id
+f262|c1 s:2,4,8,16,32x2 pf id

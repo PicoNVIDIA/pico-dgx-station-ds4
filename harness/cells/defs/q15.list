@@ -1,0 +1,2 @@
+# The 262K final: stream windows by the server counter (bench_full), then by the client counter (post-hook).
+rulerchk|s:2,8,32x1

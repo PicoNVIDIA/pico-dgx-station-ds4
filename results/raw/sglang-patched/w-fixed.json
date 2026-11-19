@@ -1,0 +1,95 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T05:08:41+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl4-20261119T050021Z/w-fixed.json",
+  "env_file": null,
+  "skip": "gsm8k_c1,greedy_c1,coding,streams,prefill,capacity,quality",
+  "reps": 3,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "fixed": {
+  "shape": "fixed prompt, greedy, thinking off, max_tokens 2048, nonce line first",
+  "runs": [
+   {
+    "prompt_tokens": 2671,
+    "completion_tokens": 2048,
+    "ttft_ms": 537.8,
+    "out_tok_s": 135.6,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 2672,
+    "completion_tokens": 2048,
+    "ttft_ms": 634.7,
+    "out_tok_s": 135.6,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 2671,
+    "completion_tokens": 2048,
+    "ttft_ms": 436.8,
+    "out_tok_s": 135.9,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   }
+  ],
+  "summary": {
+   "out_tok_s": {
+    "n": 3,
+    "median": 135.6,
+    "q1": 135.6,
+    "q3": 135.75
+   },
+   "ttft_ms": {
+    "n": 3,
+    "median": 537.8,
+    "q1": 487.3,
+    "q3": 586.25
+   },
+   "tokens_per_step": {
+    "n": 0
+   },
+   "steps_s": {
+    "n": 0
+   },
+   "completion_tokens": {
+    "n": 3,
+    "median": 2048,
+    "q1": 2048.0,
+    "q3": 2048.0
+   },
+   "prompt_tokens": {
+    "n": 3,
+    "median": 2671,
+    "q1": 2671.0,
+    "q3": 2671.5
+   }
+  }
+ },
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-19T05:09:46+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

@@ -1,0 +1,100 @@
+start 2026-11-19T02:52:51Z
+== quick (5 layers) 03:08:12
+  layer  0: 384 experts, codes 119..125, 3 s
+  layer 10: 384 experts, codes 119..123, 6 s
+  layer 20: 384 experts, codes 118..125, 9 s
+  layer 30: 384 experts, codes 119..124, 12 s
+  layer 39: 384 experts, codes 117..127, 15 s
+K7 scale survey: /raid/models/DeepSeek-V4.1-Flash-1017
+  read 1.98 GiB of scales = 12.5 % of the routed experts (5 layers x 384 experts) in 15 s; group order: expert id
+A. code range (decides the 4-bit pack of option a)
+  distinct values 11: [117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127]
+  codes outside 0x70..0x7F: 0  -> low-nibble pack VALID; every layer spans <= 15: yes
+  most common: 120 57.0 %, 121 42.8 %, 122 0.1 %, 119 0.0 %, 123 0.0 %
+B. entropy, bits per 8-bit code (bounds for anything denser than 4 bits)
+  order 0 1.007 | given left neighbour 1.000 | given row above 1.002 | per 4-code word 0.998
+  4-code words: 907 distinct; top 16 cover 99.42 %, top 256 cover 99.99 % (a 1-byte word index needs 100 % or an escape)
+  rows whose scales are all one value: 0.00 %
+  fixed-rate packs against the 15.82 GiB of routed-expert scales in this checkpoint:
+    4-bit low nibble                   4.0 bits  frees  7.91 GiB = +11.3 hot/layer  valid
+    5 codes in 16 bits (base 9)        3.2 bits  frees  9.49 GiB = +13.6 hot/layer  NOT valid on this data
+    entropy bound (order 0)            1.0 bits  frees 13.83 GiB = +19.8 hot/layer  (not a fixed-rate format)
+C. page de-duplication (option b); banks in MegaMoE's layout, cut from each bank's base
+  unit        chunks   distinct  dup in bank  dup in layer  dup in model   constant   dup share
+    2 MiB       1010       1010            0             0             0          0     0.000 %
+   64 KiB      32400      32400            0             0             0          0     0.000 %
+    4 KiB     518400     518400            0             0             0          0     0.000 %
+  2 MiB is the only unit CUDA VMM can map on this driver: 0 duplicate granules = 0.000 GiB in what was read (about 0.00 GiB if the rest is alike) = +0.0 hot/layer
+D. whole-expert duplicates (same scale block as another expert)
+  l1: 0 of 1920 blocks duplicate another (0 inside their own layer)
+  l2: 0 of 1920 blocks duplicate another (0 inside their own layer)
+E. pack self-check on bank bytes: 44236800 bytes packed and unpacked, 0 mismatches
+quick rc=0
+== full (40 layers) 03:08:27
+  layer  0: 384 experts, codes 119..125, 3 s
+  layer  1: 384 experts, codes 119..125, 6 s
+  layer  2: 384 experts, codes 119..124, 9 s
+  layer  3: 384 experts, codes 119..124, 12 s
+  layer  4: 384 experts, codes 119..124, 15 s
+  layer  5: 384 experts, codes 119..124, 18 s
+  layer  6: 384 experts, codes 119..124, 21 s
+  layer  7: 384 experts, codes 119..125, 25 s
+  layer  8: 384 experts, codes 119..124, 28 s
+  layer  9: 384 experts, codes 119..123, 32 s
+  layer 10: 384 experts, codes 119..123, 36 s
+  layer 11: 384 experts, codes 119..125, 40 s
+  layer 12: 384 experts, codes 119..124, 44 s
+  layer 13: 384 experts, codes 118..126, 48 s
+  layer 14: 384 experts, codes 119..124, 52 s
+  layer 15: 384 experts, codes 118..124, 57 s
+  layer 16: 384 experts, codes 119..124, 61 s
+  layer 17: 384 experts, codes 118..124, 66 s
+  layer 18: 384 experts, codes 118..125, 70 s
+  layer 19: 384 experts, codes 118..125, 75 s
+  layer 20: 384 experts, codes 118..125, 80 s
+  layer 21: 384 experts, codes 118..126, 85 s
+  layer 22: 384 experts, codes 119..125, 90 s
+  layer 23: 384 experts, codes 119..125, 95 s
+  layer 24: 384 experts, codes 119..125, 100 s
+  layer 25: 384 experts, codes 119..125, 106 s
+  layer 26: 384 experts, codes 118..125, 112 s
+  layer 27: 384 experts, codes 118..125, 118 s
+  layer 28: 384 experts, codes 118..125, 124 s
+  layer 29: 384 experts, codes 119..124, 130 s
+  layer 30: 384 experts, codes 119..124, 136 s
+  layer 31: 384 experts, codes 118..125, 142 s
+  layer 32: 384 experts, codes 119..125, 149 s
+  layer 33: 384 experts, codes 119..124, 156 s
+  layer 34: 384 experts, codes 119..124, 163 s
+  layer 35: 384 experts, codes 118..124, 170 s
+  layer 36: 384 experts, codes 118..125, 177 s
+  layer 37: 384 experts, codes 118..126, 183 s
+  layer 38: 384 experts, codes 117..126, 191 s
+  layer 39: 384 experts, codes 117..127, 198 s
+K7 scale survey: /raid/models/DeepSeek-V4.1-Flash-1017
+  read 15.82 GiB of scales = 100.0 % of the routed experts (40 layers x 384 experts) in 198 s; group order: rowmap (hot then cold)
+A. code range (decides the 4-bit pack of option a)
+  distinct values 11: [117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127]
+  codes outside 0x70..0x7F: 0  -> low-nibble pack VALID; every layer spans <= 15: yes
+  most common: 120 58.7 %, 121 41.2 %, 122 0.0 %, 119 0.0 %, 123 0.0 %
+B. entropy, bits per 8-bit code (bounds for anything denser than 4 bits)
+  order 0 0.989 | given left neighbour 0.984 | given row above 0.985 | per 4-code word 0.983
+  4-code words: 971 distinct; top 16 cover 99.69 %, top 256 cover 100.00 % (a 1-byte word index needs 100 % or an escape)
+  rows whose scales are all one value: 0.00 %
+  fixed-rate packs against the 15.82 GiB of routed-expert scales in this checkpoint:
+    4-bit low nibble                   4.0 bits  frees  7.91 GiB = +11.3 hot/layer  valid
+    5 codes in 16 bits (base 9)        3.2 bits  frees  9.49 GiB = +13.6 hot/layer  NOT valid on this data
+    entropy bound (order 0)            1.0 bits  frees 13.86 GiB = +19.8 hot/layer  (not a fixed-rate format)
+C. page de-duplication (option b); banks in MegaMoE's layout, cut from each bank's base
+  unit        chunks   distinct  dup in bank  dup in layer  dup in model   constant   dup share
+    2 MiB       8080       8080            0             0             0          0     0.000 %
+   64 KiB     259200     259200            0             0             0          0     0.000 %
+    4 KiB    4147200    4147200            0             0             0          0     0.000 %
+  2 MiB is the only unit CUDA VMM can map on this driver: 0 duplicate granules = 0.000 GiB in what was read (about 0.00 GiB if the rest is alike) = +0.0 hot/layer
+D. whole-expert duplicates (same scale block as another expert)
+  l1: 0 of 15360 blocks duplicate another (0 inside their own layer)
+  l2: 0 of 15360 blocks duplicate another (0 inside their own layer)
+E. pack self-check on bank bytes: 353894400 bytes packed and unpacked, 0 mismatches
+full rc=0
+end 2026-11-19T03:11:50Z
+DONE

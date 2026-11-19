@@ -1,0 +1,25 @@
+start 2026-11-19T00:46:20Z
+== CELL ord3f  [c1 s:2,4,8,16,32x2 id]  00:46:20
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_FASTPATH_COMPONENTS_OVERRIDE=tail_markov_fused,tail_swa_meta,tail_dflash_prep,tail_ctxkv,tail_replay_skip,tail_embed,tail_drafthead_mxfp8,attn,preattn,preattn_cand,preattn_index,preattn_compress,tail_draft_embed,boundary,suffix,topp_fast,w8oproj,tail_proj_side,lowb_aux,engram_side,fastload,gracetier,megamoe,quant_producer,a12_retire,a12_m
+K6 in place, syntax ok
+hot map: 40 layers x 302 -> /raid/work/run/cells/hot-302.json
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-302.json, all entries >= 0, permutat
+NOT SERVING (up rc=1)
+    raise RuntimeError(f"gracetier-res: {what} runs on CUDA stream {cur:#x}, this step's barrier ran on "
+RuntimeError: gracetier-res: an eager gt_stage call inside execute_model runs on CUDA stream 0x1e7f4080, this step's barrier ran on 0x0; swaps would not be stream-ordered with the step. Refusing.
+    raise RuntimeError(
+CELL_DONE ord3f FAILED_BOOT
+== CELL u99  [c1 s:8,32x2 id]  00:52:52
+policy additions: DS41_UTIL=0.99 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 305 -> /raid/work/run/cells/hot-305.json
+make_rowmap_allres: 40 layers, H=305 (per-layer [305]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-305.json, all entries >= 0, permutat
+NOT SERVING (up rc=1)
+    if int(error):raise RuntimeError((str(error),values))
+RuntimeError: ('<CUresult.CUDA_ERROR_OUT_OF_MEMORY: 2>', [None])
+    raise RuntimeError(
+CELL_DONE u99 FAILED_BOOT
+== CELL score1m  [full id]  00:57:33
+policy additions: DS41_UTIL=0.98 DS41_GT_STAGE_SKIP=1 
+CUT after u99 by queue 11 at 00:57:42 (score1m moved to queue 11)
+DONE

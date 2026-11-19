@@ -1,0 +1,69 @@
+start 2026-11-19T15:38:19Z
+== CELL soak1m  [lsoak:4 q id]  15:38:19
+policy additions: DS41_UTIL=0.98 DS41_GT_STAGE_SKIP=1 DS41_GT_STAGE_SKIP_AUDIT=200 
+K6 in place, syntax ok
+hot map: 40 layers x 291 -> /raid/work/run/cells/hot-291.json
+make_rowmap_allres: 40 layers, H=291 (per-layer [291]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-291.json, all entries >= 0, permutat
+serving at 15:43:04; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [291], G = 384, 22320 cold tensors in Grace (61.30 GiB, read 47.5 s, registered 0.28 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 1,484,855 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.42x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+soak1m-lsoak: after 150 s: prefill rounds 4 with 4 results; memory samples 3
+soak1m-lsoak-r1: | 2 | 543 | 271.5 | 3.695 | 600 |
+soak1m-lsoak-r1: | 4 | 759 | 189.7 | 3.665 | 600 |
+soak1m-lsoak-r1: | 8 | 1,056 | 132.1 | 3.052 | 600 |
+soak1m-lsoak-r1: | 16 | 1,472 | 92.0 | 3.062 | 600 |
+soak1m-lsoak-r1: | 32 | 1,936 | 60.5 | 3.061 | 600 |
+soak1m-lsoak-r1-a: errors 0; decode tok/s 227.19 (20 timed); ms/step 13.513 tok/step 3.032 ms/token 4.457
+soak1m-lsoak-r1-b: errors 0; decode tok/s 297.75 (20 timed); ms/step 10.039 tok/step 2.951 ms/token 3.402
+soak1m-lsoak: round 1 of 4 done 16:36:26; prefill rounds 90 with 90 results; server log error lines 0; restarts 0
+soak1m-lsoak-r2: | 2 | 549 | 274.3 | 3.696 | 600 |
+soak1m-lsoak-r2: | 4 | 762 | 190.6 | 3.674 | 600 |
+soak1m-lsoak-r2: | 8 | 1,059 | 132.4 | 3.057 | 600 |
+soak1m-lsoak-r2: | 16 | 1,475 | 92.2 | 3.047 | 600 |
+soak1m-lsoak-r2: | 32 | 1,959 | 61.2 | 3.055 | 600 |
+soak1m-lsoak-r2-a: errors 0; decode tok/s 243.54 (20 timed); ms/step 12.7 tok/step 3.052 ms/token 4.161
+soak1m-lsoak-r2-b: errors 0; decode tok/s 248.08 (20 timed); ms/step 12.132 tok/step 2.973 ms/token 4.08
+soak1m-lsoak: round 2 of 4 done 17:28:47; prefill rounds 181 with 181 results; server log error lines 0; restarts 0
+soak1m-lsoak-r3: | 2 | 536 | 268.2 | 3.691 | 600 |
+soak1m-lsoak-r3: | 4 | 756 | 188.9 | 3.688 | 600 |
+soak1m-lsoak-r3: | 8 | 1,061 | 132.6 | 3.052 | 600 |
+soak1m-lsoak-r3: | 16 | 1,479 | 92.4 | 3.056 | 600 |
+soak1m-lsoak-r3: | 32 | 1,948 | 60.9 | 3.05 | 600 |
+soak1m-lsoak-r3-a: errors 0; decode tok/s 267.88 (20 timed); ms/step 11.522 tok/step 3.046 ms/token 3.783
+soak1m-lsoak-r3-b: errors 0; decode tok/s 245.88 (20 timed); ms/step 12.188 tok/step 2.96 ms/token 4.117
+soak1m-lsoak: round 3 of 4 done 18:21:06; prefill rounds 271 with 271 results; server log error lines 0; restarts 0
+soak1m-lsoak-r4: | 2 | 543 | 271.5 | 3.686 | 600 |
+soak1m-lsoak-r4: | 4 | 757 | 189.2 | 3.681 | 600 |
+soak1m-lsoak-r4: | 8 | 1,056 | 132.1 | 3.063 | 600 |
+soak1m-lsoak-r4: | 16 | 1,469 | 91.8 | 3.056 | 600 |
+soak1m-lsoak-r4: | 32 | 1,958 | 61.2 | 3.056 | 600 |
+soak1m-lsoak-r4-a: errors 0; decode tok/s 225.37 (20 timed); ms/step 13.762 tok/step 3.062 ms/token 4.494
+soak1m-lsoak-r4-b: errors 0; decode tok/s 296.76 (20 timed); ms/step 10.092 tok/step 2.956 ms/token 3.414
+soak1m-lsoak: round 4 of 4 done 19:13:25; prefill rounds 361 with 361 results; server log error lines 0; restarts 0
+soak1m-lsoak memory (210 samples): GPU MiB first 250533 last 255767 min 250533 max 255803; host used MiB first 355656 last 354500 min 353953 max 355656; host available MiB first 150718 last 151873 min 150718
+soak1m-quality: | GSM8K-200 (thinking on, T=0.3) | 195/200 (97.5 %) |
+soak1m-quality: | needles at 200K tokens | 3/3 |
+soak1m-quality: | tool call | PASS |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq21-soak1m-c1.json
+soak1m-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K6 stage skip: steps 565248 copies 35194441 skipped 2801252 (7.4 % of staged experts; last 64 steps: 13224 / 257) audited 14012 mismatch_words 0 swap_invalidations 85830 lanes 1 enabled 1
+K6 stage skip: steps 569344 copies 36174781 skipped 2818436 (7.2 % of staged experts; last 64 steps: 14010 / 265) audited 14096 mismatch_words 0 swap_invalidations 85918 lanes 1 enabled 1
+K6 stage skip: steps 573440 copies 37146182 skipped 2836433 (7.1 % of staged experts; last 64 steps: 13944 / 292) audited 14189 mismatch_words 0 swap_invalidations 85984 lanes 1 enabled 1
+K6 stage skip: steps 577536 copies 38139982 skipped 2854061 (7.0 % of staged experts; last 64 steps: 12967 / 296) audited 14271 mismatch_words 0 swap_invalidations 86032 lanes 1 enabled 1
+K6 stage skip: steps 581632 copies 38539849 skipped 2905748 (7.0 % of staged experts; last 64 steps: 9880 / 419) audited 14526 mismatch_words 0 swap_invalidations 88058 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 200, "audited": 14716, "copied": 38692309, "copied_since": 1705, "enabled": true, "event": "stage_skip", "host_steps": 585216, "lanes": 1, "mismatch_words": 0, "skipped": 2949357, "skipped_since": 630, "swap_invalidation
+after: ds41 Up 4 hours, restarts 0, telemetry: {"at_boot": false, "cold": 3367, "cold_share": 0.031455530642750376, "drains": 9144, "event": "drain", "freeze": false, "host_steps": 585216, "hot_moved": 1641, "pending": 30, "queued": 30, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 
+CELL_DONE soak1m 19:15:31
+== CELL serve1m  []  19:15:31
+CUT after soak1m by queue 22 at 19:15:34 (serve1m moves to queue 23)
+DONE

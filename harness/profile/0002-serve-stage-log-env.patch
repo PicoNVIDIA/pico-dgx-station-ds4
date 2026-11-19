@@ -1,0 +1,11 @@
+--- a/tree/serve/serve.sh	2026-11-18 12:52:24
++++ b/tree/serve/serve.sh	2026-11-18 12:52:24
+@@ -322,6 +322,8 @@
+               -e "DS41_GPU_RESERVE_MIB=$DS41_GPU_RESERVE_MIB"
+               -e PEER3_PREBUILT=/fastpath/peer3/prebuilt -e VLLM_EXP_PEER3_SHM=/dev/shm/vllm_peer_tier3)
+   [ -n "${DS41_PEER3_SPINS:-}" ] && envs+=(-e "PEER3_SPINS=$DS41_PEER3_SPINS")
++  # K4 stage log (instrumentation, off unless set): a path inside the container, e.g. /prof/gracetier-res/k4-stage.jsonl
++  [ -n "${DS41_GT_STAGE_LOG:-}" ] && envs+=(-e "GRACETIER_STAGE_LOG=$DS41_GT_STAGE_LOG" -e "GRACETIER_STAGE_LOG_PICKS=${DS41_GT_STAGE_LOG_PICKS:-0}")
+   local envf; envf=$(mktemp); trap "rm -f '$envf'" RETURN
+   chmod 600 "$envf"; echo "VLLM_API_KEY=$(cat "$DS41_API_KEY_FILE")" > "$envf"
+   local keyargs=(--env-file "$envf"); [ "${DS41_NO_KEY:-0}" = 1 ] && keyargs=()

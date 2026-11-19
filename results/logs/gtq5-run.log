@@ -1,0 +1,103 @@
+start 2026-11-18T20:21:36Z
+== CELL base  [c1]  20:21:36
+policy additions: none
+serving at 20:28:19; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [275], G = 384, 26160 cold tensors in Grace (72.98 GiB, read 60.8 s, registered 0.31 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,713,967 tokens, Maximum concurrency for 1,048,576 tokens per request: 2.59x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+base-c1-r1-a: errors 0; decode tok/s 294.42 (20 timed); ms/step 10.484 tok/step 3.046 ms/token 3.442
+base-c1-r1-b: errors 0; decode tok/s 290.56 (20 timed); ms/step 10.3 tok/step 2.954 ms/token 3.486
+base-c1-r2-a: errors 0; decode tok/s 294.35 (20 timed); ms/step 10.486 tok/step 3.046 ms/token 3.443
+base-c1-r2-b: errors 0; decode tok/s 289.19 (20 timed); ms/step 10.349 tok/step 2.954 ms/token 3.503
+base-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 511.5 (489.1-526.5) | 138 (136-144) | 5.34 (5.22-5.50) | 97.1 (91.5-99.2) | 6 |
+after: ds41 Up 9 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 1297, "cold_share": 0.01059640522875817, "drains": 241, "event": "drain", "freeze": false, "host_steps": 15424, "hot_moved": 1844, "pending": 32, "queued": 32, "sel": 122400, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 896
+CELL_DONE base 20:31:09
+== CELL h285u97  [c1 s:2,4,8,16,32x2 pf id]  20:31:09
+policy additions: DS41_UTIL=0.97 
+hot map: 40 layers x 285 -> /raid/work/run/cells/hot-285.json
+make_rowmap_allres: 40 layers, H=285 (per-layer [285]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-285.json, all entries >= 0, permutat
+serving at 20:37:16; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [285], G = 384, 23760 cold tensors in Grace (65.63 GiB, read 48.7 s, registered 0.21 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,058,096 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.96x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+h285u97-c1-r1-a: errors 0; decode tok/s 308.08 (20 timed); ms/step 10.019 tok/step 3.046 ms/token 3.29
+h285u97-c1-r1-b: errors 0; decode tok/s 302.72 (20 timed); ms/step 9.886 tok/step 2.954 ms/token 3.346
+h285u97-c1-r2-a: errors 0; decode tok/s 308.38 (20 timed); ms/step 10.009 tok/step 3.046 ms/token 3.286
+h285u97-c1-r2-b: errors 0; decode tok/s 302.42 (20 timed); ms/step 9.896 tok/step 2.954 ms/token 3.35
+h285u97-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 535.5 (503.0-553.8) | 129 (127-134) | 5.31 (5.24-5.59) | 98.5 (96.0-101.4) | 6 |
+h285u97-streams2-r1: | 2 | 572 | 286.1 | 3.577 | 60 |
+h285u97-streams2-r1: | 4 | 821 | 205.2 | 3.656 | 60 |
+h285u97-streams2-r1: | 8 | 1,162 | 145.2 | 3.066 | 60 |
+h285u97-streams2-r1: | 16 | 1,586 | 99.1 | 3.092 | 60 |
+h285u97-streams2-r1: | 32 | 2,097 | 65.5 | 3.041 | 60 |
+h285u97-streams2-r2: | 2 | 602 | 300.9 | 3.702 | 60 |
+h285u97-streams2-r2: | 4 | 814 | 203.4 | 3.651 | 60 |
+h285u97-streams2-r2: | 8 | 1,146 | 143.3 | 3.073 | 60 |
+h285u97-streams2-r2: | 16 | 1,581 | 98.8 | 3.077 | 60 |
+h285u97-streams2-r2: | 32 | 2,110 | 65.9 | 3.027 | 60 |
+h285u97-prefill: | 14214 (14204-14222) | 288 (287-355) | 49320 (41527-49494) |
+h285u97-prefill: | 56956 (56920-56978) | 1088 (1074-1090) | 52259 (52199-53006) |
+h285u97-prefill: | 113662 (113599-113708) | 2223 (2221-2233) | 51135 (50884-51201) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 38s -> /raid/work/ident/gtq5-h285u97-c1.json
+h285u97-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+after: ds41 Up 22 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 4342, "cold_share": 0.04545644891122278, "drains": 898, "event": "drain", "freeze": false, "host_steps": 57472, "hot_moved": 1705, "pending": 33, "queued": 33, "sel": 95520, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 1680
+CELL_DONE h285u97 20:54:08
+== CELL sd4  [s:8,16,32x2]  20:54:08
+policy additions: DS41_SPEC_SCHEDULE=[[1,4,5],[5,8,4],[9,32,4]] 
+serving at 20:59:11; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 4], [9, 32, 4]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [275], G = 384, 26160 cold tensors in Grace (72.98 GiB, read 55.8 s, registered 0.31 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,713,967 tokens, Maximum concurrency for 1,048,576 tokens per request: 2.59x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 5, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+sd4-streams1-r1: | 8 | 1,009 | 126.1 | 3.429 | 60 |
+sd4-streams1-r1: | 16 | 1,484 | 92.7 | 3.444 | 60 |
+sd4-streams1-r1: | 32 | 1,915 | 59.8 | 3.401 | 60 |
+sd4-streams1-r2: | 8 | 1,103 | 137.9 | 3.427 | 60 |
+sd4-streams1-r2: | 16 | 1,492 | 93.3 | 3.455 | 60 |
+sd4-streams1-r2: | 32 | 1,910 | 59.7 | 3.432 | 60 |
+after: ds41 Up 13 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 24327, "cold_share": 0.010385502049180328, "drains": 309, "event": "drain", "freeze": false, "host_steps": 19776, "hot_moved": 2038, "pending": 0, "queued": 0, "sel": 2342400, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 66
+CELL_DONE sd4 21:08:23
+== CELL sd5  [s:8,16,32x2]  21:08:23
+policy additions: DS41_SPEC_SCHEDULE=[[1,4,5],[5,8,5],[9,32,5]] 
+serving at 21:14:05; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 5], [9, 32, 5]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [275], G = 384, 26160 cold tensors in Grace (72.98 GiB, read 57.0 s, registered 0.27 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,728,169 tokens, Maximum concurrency for 1,048,576 tokens per request: 2.60x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+sd5-streams1-r1: | 8 | 1,017 | 127.1 | 3.673 | 60 |
+sd5-streams1-r1: | 16 | 1,419 | 88.7 | 3.709 | 60 |
+sd5-streams1-r1: | 32 | 1,805 | 56.4 | 3.635 | 60 |
+sd5-streams1-r2: | 8 | 1,092 | 136.5 | 3.656 | 60 |
+sd5-streams1-r2: | 16 | 1,420 | 88.7 | 3.668 | 60 |
+sd5-streams1-r2: | 32 | 1,833 | 57.3 | 3.693 | 60 |
+after: ds41 Up 14 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 23541, "cold_share": 0.010717602709790209, "drains": 292, "event": "drain", "freeze": false, "host_steps": 18688, "hot_moved": 2015, "pending": 3, "queued": 3, "sel": 2196480, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 65
+CELL_DONE sd5 21:23:17
+== CELL pf16k  [pf c1 id]  21:23:17
+policy additions: DS41_BATCHED_TOKENS=16384 DS41_LONG_PREFILL=16384 
+NOT SERVING (up rc=1)
+ValueError: To serve at least one request with the model's max seq len (1048576), (2.75 GiB KV cache is needed, which is larger than the available KV cache memory (2.27 GiB). Based on the available memory, the estimated maximum model length is 796544. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engi
+ValueError: To serve at least one request with the model's max seq len (1048576), (2.75 GiB KV cache is needed, which is larger than the available KV cache memory (2.27 GiB). Based on the available memory, the estimated maximum model length is 796544. Try increasing `gpu_memory_utilization` (which also controls CPU memory on the CPU backend) or decreasing `max_model_len` when initializing the engi
+    raise RuntimeError(
+CELL_DONE pf16k FAILED_BOOT
+== CELL k1f7  [c1 id]  21:27:39
+policy additions: DS41_K1_FIXED=7 
+CUT after pf16k by queue 6 at 21:27:54 (remaining cells moved to queue 6 on the 285 base)
+DONE

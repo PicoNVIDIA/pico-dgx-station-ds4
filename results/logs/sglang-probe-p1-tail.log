@@ -1,0 +1,60 @@
+[2026-11-19 03:13:36 PID220] engram host table: dropped the page cache of 48 checkpoint files (475 GiB) before pre-faulting the per-rank shard
+[2026-11-19 03:13:51 PID220] Tokenizer for /model is still TokenizersBackend after retries with --trust-remote-code. Model-specific tokenizer attributes may be missing.
+Multi-thread loading shards:   0% Completed | 0/48 [00:00<?, ?it/s]Multi-thread loading shards:   2% Completed | 1/48 [00:02<01:51,  2.37s/it]Multi-thread loading shards:   6% Completed | 3/48 [00:14<03:44,  4.99s/it]Multi-thread loading shards:   8% Completed | 4/48 [00:15<02:39,  3.63s/it]Multi-thread loading shards:  10% Completed | 5/48 [00:15<01:54,  2.67s/it]Multi-thread loading shards:  12% Completed | 6/48 [00:16<01:25,  2.05s/it]Multi-thread loading shards:  15% Completed | 7/48 [00:17<01:08,  1.66s/it]Multi-thread loading shards:  17% Completed | 8/48 [00:19<01:04,  1.60s/it]
+[2026-11-19 03:15:12 PID220] Finished streaming dequant fp8 wo_a
+[2026-11-19 03:15:35 PID220] engram host table: MADV_COLLAPSE errno 12
+[2026-11-19 03:15:35 PID220] engram host table layer 1: replication=none, 96681 MiB resident, 76288 MiB in huge pages (79%)
+[2026-11-19 03:15:35 PID220] engram host table layer 14: replication=none, 96684 MiB resident, 96256 MiB in huge pages (100%)
+[2026-11-19 03:15:35 PID220] DeepSeek V4 MHC prenorm prewarm: 23 n_splits buckets
+[2026-11-19 03:20:29 PID220] DeepSeek V4 MHC prewarm at load: compile 293.4s, rank sync +0.0s
+[2026-11-19 03:20:34 PID220] Paged experts: with --paged-experts-enable-disk, later starts would read these experts from /root/.cache/sglang/paged_experts (6.7 GiB) instead of loading and repacking them
+[2026-11-19 03:20:34 PID220] Scheduler hit an exception: Traceback (most recent call last):
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/scheduler.py", line 7163, in run_scheduler_process
+    scheduler = Scheduler(server_args, port_args)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/scheduler.py", line 634, in __init__
+    self.init_model_worker()
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/scheduler.py", line 1203, in init_model_worker
+    self.init_tp_model_worker()
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/scheduler.py", line 1106, in init_tp_model_worker
+    self.tp_worker = TpModelWorker(**worker_kwargs)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/tp_worker.py", line 322, in __init__
+    self._init_model_runner()
+  File "/sgl-workspace/sglang/python/sglang/srt/managers/tp_worker.py", line 490, in _init_model_runner
+    self._model_runner = ModelRunner(
+                         ^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 536, in __init__
+    self.initialize()
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 760, in initialize
+    self.load_model()
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 1417, in load_model
+    loaded = load_model_with_memory_saver(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner_components/load_model_utils.py", line 438, in load_model_with_memory_saver
+    model = loader.load_model(
+            ^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_loader/loader.py", line 1058, in load_model
+    self.load_weights_and_postprocess(
+  File "/sgl-workspace/sglang/python/sglang/srt/model_loader/loader.py", line 1068, in load_weights_and_postprocess
+    DefaultModelLoader.postprocess_weights(model, target_device)
+  File "/sgl-workspace/sglang/python/sglang/srt/model_loader/loader.py", line 1127, in postprocess_weights
+    quant_method.process_weights_after_loading(module)
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/moe/paged_experts/method.py", line 262, in process_weights_after_loading
+    self.store = fill_store(step, cache, width)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/moe/paged_experts/expert_cache.py", line 762, in fill_store
+    return build_store(step)
+           ^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/moe/paged_experts/formats.py", line 256, in build_store
+    first = step.run(experts)  # also gives the paged layout
+            ^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/moe/paged_experts/formats.py", line 142, in run
+    self.base_method.process_weights_after_loading(layer)
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/quantization/mxfp4_marlin_moe.py", line 162, in process_weights_after_loading
+    raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+RuntimeError: MXFP4 Marlin requires SM90 or SM120.
+
+[2026-11-19 03:20:34] Received sigquit from a child process. It usually means the child failed.
+[2026-11-19 03:20:34] kill_process_tree called: parent_pid=1, include_parent=True, pid=1
+[2026-11-19 03:20:34] kill_process_tree called: parent_pid=1, include_parent=False, pid=1

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img">
+<defs><clipPath id="c"><rect width="1280" height="360" rx="14"/></clipPath><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2e2e2e"/><stop offset="1" stop-color="#ffffff"/></linearGradient></defs>
+<g clip-path="url(#c)"><rect width="1280" height="360" fill="#000000"/>
+<polygon points="900,0 934,0 814,210 780,210" fill="url(#g)" opacity="0.18"/>
+<polygon points="962,0 996,0 876,210 842,210" fill="url(#g)" opacity="0.30"/>
+<polygon points="1024,0 1058,0 938,210 904,210" fill="url(#g)" opacity="0.42"/>
+<polygon points="1086,0 1120,0 1000,210 966,210" fill="url(#g)" opacity="0.54"/>
+<polygon points="1148,0 1182,0 1062,210 1028,210" fill="url(#g)" opacity="0.66"/>
+<polygon points="1210,0 1244,0 1124,210 1090,210" fill="url(#g)" opacity="0.78"/>
+<polygon points="1272,0 1306,0 1186,210 1152,210" fill="url(#g)" opacity="0.90"/>
+<rect x="0" y="0" width="10" height="360" fill="#ffffff"/>
+<text x="64.0" y="74.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#9b9b9b" text-anchor="start" letter-spacing="3">DGX STATION  /  ONE GB300  /  DRAFT</text>
+<text x="62.0" y="152.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="72" font-weight="800" fill="#ffffff" text-anchor="start">DeepSeek V4.1 Flash</text>
+<text x="64.0" y="196.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="25" font-weight="400" fill="#9b9b9b" text-anchor="start">A tuned one-GPU serving recipe, run as an endpoint</text>
+<rect x="64.0" y="238" width="370.7" height="88" rx="10" fill="#0d0d0d" stroke="#2b2b2b"/>
+<text x="88.0" y="298.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="50" font-weight="800" fill="#ffffff" text-anchor="start">540</text>
+<text x="410.7" y="291.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#9b9b9b" text-anchor="end">tok/s, one user, code</text>
+<rect x="454.7" y="238" width="370.7" height="88" rx="10" fill="#0d0d0d" stroke="#2b2b2b"/>
+<text x="478.7" y="298.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="50" font-weight="800" fill="#ffffff" text-anchor="start">2,148</text>
+<text x="801.3" y="291.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#9b9b9b" text-anchor="end">tok/s, 32 users</text>
+<rect x="845.3" y="238" width="370.7" height="88" rx="10" fill="#0d0d0d" stroke="#2b2b2b"/>
+<text x="869.3" y="298.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="50" font-weight="800" fill="#ffffff" text-anchor="start">1M</text>
+<text x="1192.0" y="291.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="400" fill="#9b9b9b" text-anchor="end">token max context</text>
+</g></svg>

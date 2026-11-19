@@ -1,0 +1,101 @@
+trace=/raid/work/logs/k5/profg/profg.sqlite
+steps=184  step_wall_median_ms=8.043  mean_ms=8.129  gpu_busy_ms=7.921 (99.0%)  sum_of_kernel_ms=9.972  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   146.5 kernels      265.1 us
+      3-6 us:   203.3 kernels      920.3 us
+     6-10 us:   117.7 kernels      908.1 us
+    10-20 us:   225.0 kernels     2544.0 us
+    20-50 us:    48.5 kernels     1273.1 us
+     >=50 us:    49.4 kernels     4087.8 us
+  under 20 us: 692.5 kernels/step, 4637.5 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3169.1    2154.6   26.5%
+moe_hot          80.0    3653.5    3499.2   43.0%
+gt_stage         40.0     388.1     263.9    3.2%
+engram            4.0      32.5      32.2    0.4%
+drafter          87.2     754.9     546.3    6.7%
+head              2.0     417.6     417.4    5.1%
+sampler           2.0      13.4       9.6    0.1%
+other           223.2    1569.3    1024.6   12.6%
+(idle)                              181.4    2.2%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3204.1    80.1    3200.8   39.4%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0     972.5    25.6     927.6   11.4%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+attention       120.0    1116.1     9.3     578.5    7.1%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     949.3    12.0     521.0    6.4%  mix_kernel
+head              2.0     417.6   208.8     417.4    5.1%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     427.3    10.7     374.2    4.6%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     379.9     4.8     333.9    4.1%  seam_kernel
+moe_hot          40.0     449.5    11.2     298.4    3.7%  router_kernel
+gt_stage         40.0     388.1     9.7     263.9    3.2%  gt_stage_skip_kernel
+drafter           3.0     123.9    41.3     123.6    1.5%  sm100_fp8_fp4_mega_moe_impl
+other             9.0     111.3    12.4      73.5    0.9%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           1.0      67.7    67.7      67.7    0.8%  markov_kernel
+attention        40.0      78.0     1.9      66.4    0.8%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      57.5    57.5      55.5    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           3.0      58.4    19.5      49.9    0.6%  attn_ss_kernel
+attention         8.0      49.4     6.2      48.5    0.6%  sm100_paged_mqa_logits
+drafter          10.0      83.7     8.4      47.9    0.6%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     251.5     5.8      44.0    0.5%  stage_kernel
+drafter           5.0      55.0    11.0      40.0    0.5%  mega_mix_kernel
+drafter           3.0      79.4    26.5      28.9    0.4%  sm100_fp8_fp4_gemm_1d1d_impl
+engram            2.0      24.9    12.5      24.7    0.3%  _engram_lookup_kernel
+attention         4.0      20.8     5.2      20.8    0.3%  _mask_candidates_kernel
+drafter           1.0      23.1    23.1      19.2    0.2%  mix_kernel
+attention         4.0      19.0     4.8      19.0    0.2%  _candidate_flags_kernel
+drafter           5.0      21.9     4.4      16.5    0.2%  mega_seam_kernel
+drafter          15.5      29.8     1.9      15.1    0.2%  vectorized_elementwise_kernel
+attention        12.0      82.2     6.8      13.4    0.2%  Kernel2
+attention         4.0      12.7     3.2      12.7    0.2%  topk_global_cs8
+drafter           1.0      11.9    11.9      11.9    0.1%  _match_chain_kernel
+drafter           6.0      13.5     2.3      11.7    0.1%  rms_norm_kernel
+drafter           1.0      17.1    17.1      10.8    0.1%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+other             2.0      10.4     5.2      10.0    0.1%  mhc_post_tilelang_kernel
+other             8.0      16.3     2.0       8.7    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+attention         4.0       8.7     2.2       8.6    0.1%  _indexer_k_norm_rope_quant_store_kernel
+attention         4.0      20.1     5.0       8.0    0.1%  _fused_save_compress_norm_kernel
+other             7.0       7.9     1.1       7.9    0.1%  vectorized_elementwise_kernel
+attention         4.0       7.6     1.9       7.6    0.1%  _compute_global_topk_indices_and_lens_kernel
+engram            2.0       7.5     3.8       7.5    0.1%  _fused_engram_post_wkv_kernel
+attention         2.0      30.1    15.1       6.7    0.1%  attn_ss_kernel
+sampler           1.0       6.2     6.2       6.2    0.1%  _rejection_kernel
+attention         2.0       6.5     3.2       6.2    0.1%  sm100_paged_mqa_logits_metadata
+other             3.0       6.2     2.0       6.2    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+other             2.0       6.1     3.0       6.1    0.1%  _swa_decode_meta_multi_kernel
+attention         3.0      18.9     6.3       5.6    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+drafter           2.0       5.6     2.8       5.6    0.1%  index_elementwise_kernel
+other             4.0       5.3     1.3       5.3    0.1%  cooperative_topk_cs8
+drafter           1.0       5.3     5.3       5.3    0.1%  _prepare_dflash_inputs_multigroup_kernel
+drafter           3.0       5.9     2.0       5.1    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+drafter           1.0       5.0     5.0       5.0    0.1%  mhc_post_tilelang_kernel
+drafter           4.8       5.4     1.1       4.4    0.1%  unrolled_elementwise_kernel
+other             3.0       4.3     1.4       4.3    0.1%  _ring_slot_mapping_kernel
+drafter           1.0       4.4     4.4       4.2    0.1%  seam_kernel
+other             1.0       4.1     4.1       4.1    0.1%  _post_update_kernel
+drafter           1.0       4.6     4.6       3.7    0.1%  mhc_pre_big_fuse_with_norm_tilelang_kernel
+other             2.0       3.6     1.8       3.6    0.0%  kernel
+other             1.0       3.6     3.6       3.6    0.0%  _gather_block_tables_kernel
+attention         2.0       3.4     1.7       3.4    0.0%  _indexer_decode_metadata_kernel
+other             2.0       3.4     1.7       3.4    0.0%  vectorized_gather_kernel
+sampler           1.0       7.2     7.2       3.4    0.0%  _compute_local_logits_stats_kernel
+other             1.0       3.3     3.3       3.3    0.0%  _compute_slot_mappings_kernel
+drafter           1.0       2.9     2.9       2.9    0.0%  _gather_draft_sampled_kernel
+drafter           1.0       3.6     3.6       2.6    0.0%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+other             2.0       2.5     1.3       2.5    0.0%  _token_request_mapping_kernel
+drafter           1.0       2.4     2.4       2.4    0.0%  _combine_sampled_and_draft_tokens_kernel
+other             1.0       2.3     2.3       2.3    0.0%  _embed_gather_kernel
+other             1.0       3.2     3.2       2.3    0.0%  _resample_kernel
+other             1.0       2.2     2.2       2.1    0.0%  _get_num_sampled_and_rejected_kernel
+other             1.0       2.0     2.0       2.0    0.0%  _insert_resampled_kernel
+other             1.0       1.9     1.9       1.9    0.0%  head_kernel
+(rest)           45.1     146.4              21.5    0.2%  24 more kernel names (use --top or --csv)

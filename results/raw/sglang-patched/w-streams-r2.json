@@ -1,0 +1,98 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T05:19:07+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl4-20261119T050021Z/w-streams-r2.json",
+  "env_file": null,
+  "skip": "fixed,gsm8k_c1,greedy_c1,coding,prefill,capacity,quality",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "2,4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "streams": [
+  {
+   "conc": 2,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 205.9,
+   "per_stream_tok_s": 102.9,
+   "server_counter_tok_s": 212.3,
+   "tokens_per_step": null,
+   "preemptions": 0.0,
+   "request_errors": 0,
+   "counted": "client"
+  },
+  {
+   "conc": 4,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 296.0,
+   "per_stream_tok_s": 74.0,
+   "server_counter_tok_s": 289.8,
+   "tokens_per_step": null,
+   "preemptions": 0.0,
+   "request_errors": 0,
+   "counted": "client"
+  },
+  {
+   "conc": 8,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 379.1,
+   "per_stream_tok_s": 47.4,
+   "server_counter_tok_s": 325.8,
+   "tokens_per_step": null,
+   "preemptions": 0.0,
+   "request_errors": 0,
+   "counted": "client"
+  },
+  {
+   "conc": 16,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 456.7,
+   "per_stream_tok_s": 28.5,
+   "server_counter_tok_s": 442.3,
+   "tokens_per_step": null,
+   "preemptions": 0.0,
+   "request_errors": 0,
+   "counted": "client"
+  },
+  {
+   "conc": 32,
+   "greedy": false,
+   "window_s": 60.0,
+   "warmup_s": 20,
+   "aggregate_tok_s": 561.3,
+   "per_stream_tok_s": 17.5,
+   "server_counter_tok_s": 494.5,
+   "tokens_per_step": null,
+   "preemptions": 0.0,
+   "request_errors": 0,
+   "counted": "client"
+  }
+ ],
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-19T05:25:47+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

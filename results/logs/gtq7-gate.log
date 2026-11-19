@@ -1,0 +1,4 @@
+gate at 22:29:05
+last counter line: K6 stage skip: steps 16384 copies 614266 skipped 186633 (23.3 % of staged experts; last 64 steps: 4206 / 2033) audited 186633 mismatch_words 0 swap_invalidations 9652 lanes 1 enabled 1
+skipped=186633 audited=186633 mismatch_words=0 enabled=1 error_lines=0 identity_40_of_40=1
+GATE PASSED

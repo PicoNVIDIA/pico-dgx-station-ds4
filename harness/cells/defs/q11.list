@@ -1,0 +1,6 @@
+# One numerics-changing component at a time on the 262K final, then the full public scoreboard on both finals.
+ord_dh|c1 s:8,32x1 id
+ord_w8|c1 s:8,32x1 id
+ord_lowb|c1 s:8,32x1 id
+score1m|full id
+score262|fullnc id

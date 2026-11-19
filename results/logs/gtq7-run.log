@@ -1,0 +1,36 @@
+start 2026-11-18T22:19:29Z
+== CELL k6a  [c1 id]  22:19:29
+policy additions: DS41_UTIL=0.97 DS41_GT_STAGE_SKIP=1 DS41_GT_STAGE_SKIP_AUDIT=1 
+K6 in place, syntax ok
+hot map: 40 layers x 285 -> /raid/work/run/cells/hot-285.json
+make_rowmap_allres: 40 layers, H=285 (per-layer [285]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-285.json, all entries >= 0, permutat
+serving at 22:25:34; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [285], G = 384, 23760 cold tensors in Grace (65.63 GiB, read 57.5 s, registered 0.25 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,064,982 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.97x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k6a-c1-r1-a: errors 0; decode tok/s 287.03 (20 timed); ms/step 10.754 tok/step 3.046 ms/token 3.531
+k6a-c1-r1-b: errors 0; decode tok/s 281.99 (20 timed); ms/step 10.613 tok/step 2.954 ms/token 3.592
+k6a-c1-r2-a: errors 0; decode tok/s 287.2 (20 timed); ms/step 10.747 tok/step 3.046 ms/token 3.529
+k6a-c1-r2-b: errors 0; decode tok/s 282.48 (20 timed); ms/step 10.595 tok/step 2.954 ms/token 3.586
+k6a-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 517.5 (492.5-535.0) | 130 (128-135) | 5.37 (5.35-5.43) | 96.0 (92.0-99.0) | 6 |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 38s -> /raid/work/ident/gtq7-k6a-c1.json
+k6a-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K6 stage skip ARMED: 40 layers, 1 lane(s), tags int32 [4752] per lane all -1, audit 1, swap hook installed; counters every 64 steps
+K6 stage skip: steps 4096 copies 197169 skipped 60965 (23.6 % of staged experts; last 64 steps: 1277 / 582) audited 60965 mismatch_words 0 swap_invalidations 3322 lanes 1 enabled 1
+K6 stage skip: steps 8192 copies 321663 skipped 104353 (24.5 % of staged experts; last 64 steps: 2354 / 701) audited 104353 mismatch_words 0 swap_invalidations 5040 lanes 1 enabled 1
+K6 stage skip: steps 12288 copies 449319 skipped 149044 (24.9 % of staged experts; last 64 steps: 1786 / 901) audited 149044 mismatch_words 0 swap_invalidations 6826 lanes 1 enabled 1
+K6 stage skip: steps 16384 copies 614266 skipped 186633 (23.3 % of staged experts; last 64 steps: 4206 / 2033) audited 186633 mismatch_words 0 swap_invalidations 9652 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 1, "audited": 217623, "copied": 691961, "copied_since": 1949, "enabled": true, "event": "stage_skip", "host_steps": 18560, "lanes": 1, "mismatch_words": 0, "skipped": 217623, "skipped_since": 712, "swap_invalidations": 1
+after: ds41 Up 9 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3694, "cold_share": 0.034822775263951736, "drains": 290, "event": "drain", "freeze": false, "host_steps": 18560, "hot_moved": 1625, "pending": 29, "queued": 29, "sel": 106080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 11
+CELL_DONE k6a 22:29:05
+end 2026-11-18T22:29:05Z
+DONE

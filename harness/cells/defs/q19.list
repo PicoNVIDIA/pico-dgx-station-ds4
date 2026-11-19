@@ -1,0 +1,8 @@
+# K7 speed cells. Compare with k7ctlA / fitdump / f262 (302 hot, 262K) and with f1m / score1m (291 hot, 1M).
+k7kb302|c1 s:8,32x2 id
+k7p302|c1 s:2,4,8,16,32x2 pf id
+k7p307|c1 s:2,4,8,16,32x2 pf id
+k7p296m|c1 s:2,4,8,16,32x2 pf id
+k7p308|c1 s:8,32x2 id
+k7p297m|c1 s:8,32x2 id
+serve524r|

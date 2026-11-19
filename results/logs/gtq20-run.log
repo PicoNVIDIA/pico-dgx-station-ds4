@@ -1,0 +1,444 @@
+start 2026-11-19T09:57:34Z
+== CELL k7cap1m  [full id]  09:57:34
+policy additions: DS41_UTIL=0.98 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 10:01:57; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [291], G = 384, 22320 cold tensors in Grace (61.30 GiB, read 50.0 s, registered 0.25 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,784,547 tokens, Maximum concurrency for 1,048,576 tokens per request: 2.66x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7cap1m-score: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 507.0 (502.1-539.0) | 132 (128-138) | 5.30 (5.30-5.44) | 97.3 (94.9-99.0) | 5 |
+k7cap1m-score: | coding prompt (2,048 out, greedy, thinking off) | 580.4 (500.1-586.3) | 174 (169-179) | 6.18 (6.13-6.34) | 95.0 (88.2-95.0) | 5 |
+k7cap1m-score: | GSM8K decode, T=1.0, thinking on (60 s window) | 399.4 | — | 3.813 | — | window |
+k7cap1m-score: | GSM8K decode, greedy, thinking off (60 s window) | 487.3 | — | 4.726 | — | window |
+k7cap1m-score: | 2 | 576 | 288.2 | 3.677 | 60 |
+k7cap1m-score: | 4 | 807 | 201.7 | 3.611 | 60 |
+k7cap1m-score: | 8 | 1,143 | 142.9 | 3.032 | 60 |
+k7cap1m-score: | 16 | 1,574 | 98.4 | 3.026 | 60 |
+k7cap1m-score: | 32 | 2,084 | 65.1 | 3.057 | 60 |
+k7cap1m-score: | 14275 (14240-14280) | 288 (287-339) | 49491 (43069-49563) |
+k7cap1m-score: | 56835 (56824-56849) | 1077 (1074-1103) | 52791 (51585-52932) |
+k7cap1m-score: | 113751 (113665-113782) | 2248 (2246-2250) | 50550 (50539-50615) |
+k7cap1m-score: | GSM8K-200 (thinking on, T=0.3) | 197/200 (98.5 %) |
+k7cap1m-score: | needles at 200K tokens | 3/3 |
+k7cap1m-score: GPU KV cache: ? tokens. 16 distinct ~110,000-token contexts decoding 2,500 forced tokens each, plus one needle request: not all ran at once (max running 16.0, max waiting 13.0), 0 preemptions, peak KV use 52 %, wall 65.0 s, all requests correct.
+k7cap1m-score: | tool call | PASS |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 35s -> /raid/work/ident/gtq20-k7cap1m-c1.json
+k7cap1m-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 22
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 45056 kernel_err 0
+K7 packed scales: steps 49152 kernel_err 0
+K7 packed scales: steps 53248 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 53248 copies 2394168 skipped 320273 (11.8 % of staged experts; last 64 steps: 1780 / 947) audited 0 mismatch_words 0 swap_invalidations 19959 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2400939, "copied_since": 1700, "enabled": true, "event": "stage_skip", "host_steps": 53568, "lanes": 1, "mismatch_words": 0, "skipped": 323266, "skipped_since": 663, "swap_invalidations": 20090
+after: ds41 Up 18 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3348, "cold_share": 0.031138392857142858, "drains": 837, "event": "drain", "freeze": false, "host_steps": 53568, "hot_moved": 1639, "pending": 28, "queued": 28, "sel": 107520, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 20
+CELL_DONE k7cap1m 10:15:58
+== CELL k7cap524  [full id]  10:15:58
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 10:21:55; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [298], G = 384, 20640 cold tensors in Grace (56.69 GiB, read 51.7 s, registered 0.24 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,060,127 tokens, Maximum concurrency for 524,288 tokens per request: 3.93x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7cap524-score: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 541.4 (527.9-543.0) | 124 (122-129) | 5.50 (5.42-5.66) | 98.7 (96.0-100.8) | 5 |
+k7cap524-score: | coding prompt (2,048 out, greedy, thinking off) | 599.2 (553.9-618.7) | 165 (163-171) | 6.21 (5.87-6.39) | 96.6 (94.4-97.0) | 5 |
+k7cap524-score: | GSM8K decode, T=1.0, thinking on (60 s window) | 399.5 | — | 3.735 | — | window |
+k7cap524-score: | GSM8K decode, greedy, thinking off (60 s window) | 494.5 | — | 4.706 | — | window |
+k7cap524-score: | 2 | 593 | 296.4 | 3.704 | 60 |
+k7cap524-score: | 4 | 844 | 210.9 | 3.703 | 60 |
+k7cap524-score: | 8 | 1,174 | 146.7 | 3.034 | 60 |
+k7cap524-score: | 16 | 1,632 | 102.0 | 3.018 | 60 |
+k7cap524-score: | 32 | 2,153 | 67.3 | 3.062 | 60 |
+k7cap524-score: | 14250 (14226-14274) | 281 (280-321) | 50609 (45003-50826) |
+k7cap524-score: | 56805 (56758-56808) | 1068 (1056-1110) | 53101 (51218-53738) |
+k7cap524-score: | 113679 (113663-113700) | 2164 (2162-2171) | 52520 (52347-52581) |
+k7cap524-score: | GSM8K-200 (thinking on, T=0.3) | 195/200 (97.5 %) |
+k7cap524-score: | needles at 200K tokens | 3/3 |
+k7cap524-score: GPU KV cache: ? tokens. 16 distinct ~110,000-token contexts decoding 2,500 forced tokens each, plus one needle request: not all ran at once (max running 16.0, max waiting 13.0), 0 preemptions, peak KV use 60 %, wall 66.1 s, all requests correct.
+k7cap524-score: | tool call | PASS |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 34s -> /raid/work/ident/gtq20-k7cap524-c1.json
+k7cap524-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 22
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 45056 kernel_err 0
+K7 packed scales: steps 49152 kernel_err 0
+K7 packed scales: steps 53248 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 53248 copies 2056142 skipped 279114 (12.0 % of staged experts; last 64 steps: 1110 / 565) audited 0 mismatch_words 0 swap_invalidations 18996 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2068827, "copied_since": 1619, "enabled": true, "event": "stage_skip", "host_steps": 53824, "lanes": 1, "mismatch_words": 0, "skipped": 284997, "skipped_since": 544, "swap_invalidations": 19232
+after: ds41 Up 19 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3172, "cold_share": 0.029501488095238095, "drains": 841, "event": "drain", "freeze": false, "host_steps": 53824, "hot_moved": 1670, "pending": 32, "queued": 32, "sel": 107520, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 19
+CELL_DONE k7cap524 10:35:44
+== CELL profk0  []  10:35:44
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_NSYS_WRAP=1 DS41_NSYS_TAG=profk0 DS41_NSYS_DIR=/opt/nvidia/nsight-systems/2025.6.3 
+K7 in place, syntax ok
+serve.sh: K5 profile hook already present
+serve.sh syntax ok
+serving at 10:42:36; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 45.4 s, registered 0.24 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 525,234 tokens, Maximum concurrency for 262,144 tokens per request: 2.00x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+K7 lines in this boot: 0
+JIT include root /tmp/ds41-megamoe-fork/shared-early-7575386ce19c02ec (pipeline variant shared-early)
+ds41 runs under the nsys wrap
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": false, "wall_s": 1.552, "steps": 187.0, "gen_tokens": 512.0, "tokens_per_step": 2.738, "ms_per_step_wall": 8.302, "to
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": true, "start_profile": [200, ""], "stop_profile": [-1, "RemoteDisconnected('Remote end closed connection without resp
+Generating '/tmp/nsys-report-e090.qdstrm'
+[1/1] [0%                          ] profk0.nsys-repProcessing events...
+[1/1] [0%                          ] profk0.nsys-rep[1/1] [6%                          ] profk0.nsys-rep[1/1] [5%                          ] profk0.nsys-rep[1/1] [5%                          ] pro
+	/prof/profk0/profk0.nsys-rep
+nsys export rc=0 (17M)
+table rc=0 -> /raid/work/logs/k5/profk0/table.txt (101 lines)
+trace=/raid/work/logs/k5/profk0/profk0.sqlite
+steps=184  step_wall_median_ms=7.967  mean_ms=8.089  gpu_busy_ms=7.856 (99.0%)  sum_of_kernel_ms=9.895  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   168.8 kernels      334.4 us
+      3-6 us:   182.9 kernels      846.2 us
+     6-10 us:   120.8 kernels      944.0 us
+    10-20 us:   220.4 kernels     2490.4 us
+    20-50 us:    48.3 kernels     1256.6 us
+     >=50 us:    49.0 kernels     4066.6 us
+  under 20 us: 692.9 kernels/step, 4615.0 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3140.7    2119.9   26.2%
+moe_hot          80.0    3647.7    3495.4   43.2%
+gt_stage         40.0     366.4     247.6    3.1%
+engram            4.0      32.4      32.1    0.4%
+drafter          87.1     751.0     546.4    6.8%
+head              2.0     417.9     417.7    5.2%
+sampler           2.0      13.2      10.2    0.1%
+other           223.2    1568.9    1027.0   12.7%
+(idle)                              192.8    2.4%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3199.9    80.0    3196.4   39.5%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0     959.4    25.2     909.7   11.2%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+attention       120.0    1111.3     9.3     575.3    7.1%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     949.3    12.0     523.5    6.5%  mix_kernel
+head              2.0     417.9   208.9     417.7    5.2%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     426.2    10.7     372.8    4.6%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     377.7     4.8     332.2    4.1%  seam_kernel
+moe_hot          40.0     447.8    11.2     299.0    3.7%  router_kernel
+gt_stage         40.0     366.4     9.2     247.6    3.1%  gt_stage_skip_kernel
+drafter           3.0     124.4    41.5     124.0    1.5%  sm100_fp8_fp4_mega_moe_impl
+other             9.0     111.8    12.4      74.0    0.9%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+attention        40.0      78.2     2.0      66.7    0.8%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      66.6    66.6      66.6    0.8%  markov_kernel
+drafter           1.0      57.5    57.5      54.8    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           3.0      58.4    19.4      50.2    0.6%  attn_ss_kernel
+attention         8.0      49.8     6.2      49.0    0.6%  sm100_paged_mqa_logits
+drafter          10.0      83.9     8.4      48.4    0.6%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     252.4     5.9      42.8    0.5%  stage_kernel
+drafter           5.0      51.7    10.3      37.2    0.5%  mega_mix_kernel
+drafter           3.0      79.2    26.4      28.8    0.4%  sm100_fp8_fp4_gemm_1d1d_impl
+engram            2.0      24.8    12.4      24.5    0.3%  _engram_lookup_kernel
+drafter           1.0      22.7    22.7      18.8    0.2%  mix_kernel
+drafter          15.4      34.6     2.2      16.3    0.2%  vectorized_elementwise_kernel
+drafter           5.0      21.4     4.3      16.0    0.2%  mega_seam_kernel
+attention         4.0      14.1     3.5      14.1    0.2%  _mask_candidates_kernel
+attention        12.0      83.1     6.9      13.4    0.2%  Kernel2
+attention         4.0      13.4     3.4      13.4    0.2%  _candidate_flags_kernel
+attention         4.0      12.6     3.1      12.6    0.2%  topk_global_cs8
+drafter           1.0      11.9    11.9      11.9    0.1%  _match_chain_kernel
+drafter           6.0      13.4     2.2      11.4    0.1%  rms_norm_kernel
+drafter           1.0      17.0    17.0      10.4    0.1%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+other             2.0      10.4     5.2      10.0    0.1%  mhc_post_tilelang_kernel
+other             8.0      16.8     2.1       9.1    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+attention         4.0       8.7     2.2       8.6    0.1%  _indexer_k_norm_rope_quant_store_kernel
+attention         4.0       8.4     2.1       8.4    0.1%  _compute_global_topk_indices_and_lens_kernel
+other             7.0       8.2     1.2       8.2    0.1%  vectorized_elementwise_kernel
+attention         4.0      20.0     5.0       7.9    0.1%  _fused_save_compress_norm_kernel
+engram            2.0       7.6     3.8       7.6    0.1%  _fused_engram_post_wkv_kernel
+attention         2.0      30.0    15.0       6.6    0.1%  attn_ss_kernel
+other             3.0       6.5     2.2       6.5    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+sampler           1.0       6.2     6.2       6.2    0.1%  _rejection_kernel
+attention         2.0       6.5     3.2       6.1    0.1%  sm100_paged_mqa_logits_metadata
+other             2.0       5.9     2.9       5.9    0.1%  _swa_decode_meta_multi_kernel
+drafter           2.0       5.9     2.9       5.9    0.1%  index_elementwise_kernel
+attention         3.0      19.0     6.3       5.6    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+other             4.0       5.4     1.3       5.4    0.1%  cooperative_topk_cs8
+drafter           1.0       5.3     5.3       5.3    0.1%  _prepare_dflash_inputs_multigroup_kernel
+drafter           3.0       5.9     2.0       5.2    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+drafter           3.0      17.3     5.8       4.8    0.1%  stage_kernel
+after: , restarts 0, telemetry: {"at_boot": false, "cold": 374, "cold_share": 0.003975340136054422, "drains": 114, "event": "drain", "freeze": false, "host_steps": 7296, "hot_moved": 1632, "pending": 23, "queued": 23, "sel": 94080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 4329,
+CELL_DONE profk0 10:43:57
+== CELL profkb  []  10:43:57
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=kernel-b6 DS41_NSYS_WRAP=1 DS41_NSYS_TAG=profkb DS41_NSYS_DIR=/opt/nvidia/nsight-systems/2025.6.3 
+K7 in place, syntax ok
+serve.sh: K5 profile hook already present
+serve.sh syntax ok
+serving at 10:50:31; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 45.1 s, registered 0.21 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 524,651 tokens, Maximum concurrency for 262,144 tokens per request: 2.00x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+K7 lines in this boot: 4
+JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+K7 kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'} is live; the scale banks are dense and no SymmBuffer's K7 word is ever set,
+ds41 runs under the nsys wrap
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": false, "wall_s": 1.582, "steps": 186.0, "gen_tokens": 512.0, "tokens_per_step": 2.753, "ms_per_step_wall": 8.506, "to
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": true, "start_profile": [200, ""], "stop_profile": [-1, "RemoteDisconnected('Remote end closed connection without resp
+Generating '/tmp/nsys-report-56a7.qdstrm'
+[1/1] [0%                          ] profkb.nsys-repProcessing events...
+[1/1] [0%                          ] profkb.nsys-rep[1/1] [6%                          ] profkb.nsys-rep[1/1] [5%                          ] profkb.nsys-rep[1/1] [5%                          ] pro
+	/prof/profkb/profkb.nsys-rep
+nsys export rc=0 (17M)
+table rc=0 -> /raid/work/logs/k5/profkb/table.txt (101 lines)
+trace=/raid/work/logs/k5/profkb/profkb.sqlite
+steps=193  step_wall_median_ms=8.194  mean_ms=8.315  gpu_busy_ms=8.076 (99.0%)  sum_of_kernel_ms=10.118  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   171.9 kernels      339.4 us
+      3-6 us:   175.7 kernels      810.0 us
+     6-10 us:   122.0 kernels      940.5 us
+    10-20 us:   222.4 kernels     2513.3 us
+    20-50 us:    48.9 kernels     1298.4 us
+     >=50 us:    49.2 kernels     4252.6 us
+  under 20 us: 692.0 kernels/step, 4603.3 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3177.8    2166.2   26.1%
+moe_hot          80.0    3840.1    3688.0   44.4%
+gt_stage         40.0     355.3     238.5    2.9%
+engram            4.0      32.8      32.7    0.4%
+drafter          86.9     758.2     552.2    6.6%
+head              2.0     417.6     417.3    5.0%
+sampler           2.0      13.2       9.6    0.1%
+other           223.2    1559.3    1009.0   12.1%
+(idle)                              201.3    2.4%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3383.2    84.6    3380.7   40.7%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0     993.4    26.1     951.4   11.4%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+attention       120.0    1118.2     9.3     581.9    7.0%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     943.4    11.9     506.3    6.1%  mix_kernel
+head              2.0     417.6   208.8     417.3    5.0%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     427.0    10.7     373.9    4.5%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     377.6     4.8     332.5    4.0%  seam_kernel
+moe_hot          40.0     456.9    11.4     307.3    3.7%  router_kernel
+gt_stage         40.0     355.3     8.9     238.5    2.9%  gt_stage_skip_kernel
+drafter           3.0     129.2    43.1     128.9    1.6%  sm100_fp8_fp4_mega_moe_impl
+other             9.0     108.8    12.1      73.1    0.9%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           1.0      66.7    66.7      66.7    0.8%  markov_kernel
+attention        40.0      74.8     1.9      63.2    0.8%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      58.0    58.0      55.9    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           3.0      58.5    19.5      49.6    0.6%  attn_ss_kernel
+attention         8.0      49.9     6.2      49.0    0.6%  sm100_paged_mqa_logits
+drafter          10.0      84.0     8.4      48.1    0.6%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     254.3     5.9      44.2    0.5%  stage_kernel
+drafter           5.0      52.9    10.6      38.2    0.5%  mega_mix_kernel
+drafter           3.0      79.2    26.4      28.6    0.3%  sm100_fp8_fp4_gemm_1d1d_impl
+engram            2.0      25.2    12.6      25.1    0.3%  _engram_lookup_kernel
+drafter           1.0      23.4    23.4      19.5    0.2%  mix_kernel
+drafter           5.0      21.6     4.3      16.1    0.2%  mega_seam_kernel
+drafter          15.3      34.1     2.2      15.7    0.2%  vectorized_elementwise_kernel
+attention         4.0      14.1     3.5      14.1    0.2%  _mask_candidates_kernel
+attention        12.0      81.4     6.8      13.7    0.2%  Kernel2
+attention         4.0      13.4     3.4      13.4    0.2%  _candidate_flags_kernel
+attention         4.0      12.6     3.2      12.6    0.1%  topk_global_cs8
+drafter           1.0      12.1    12.1      12.1    0.1%  _match_chain_kernel
+drafter           6.0      13.5     2.2      11.8    0.1%  rms_norm_kernel
+drafter           1.0      17.3    17.3      10.4    0.1%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+other             2.0      10.1     5.1       9.7    0.1%  mhc_post_tilelang_kernel
+other             8.0      16.2     2.0       8.8    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+attention         4.0       8.8     2.2       8.7    0.1%  _indexer_k_norm_rope_quant_store_kernel
+other             7.0       8.0     1.1       8.0    0.1%  vectorized_elementwise_kernel
+engram            2.0       7.6     3.8       7.6    0.1%  _fused_engram_post_wkv_kernel
+attention         4.0       7.5     1.9       7.5    0.1%  _compute_global_topk_indices_and_lens_kernel
+attention         4.0      19.9     5.0       7.5    0.1%  _fused_save_compress_norm_kernel
+attention         2.0      30.2    15.1       6.9    0.1%  attn_ss_kernel
+other             3.0       6.6     2.2       6.6    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+attention         2.0       6.4     3.2       6.0    0.1%  sm100_paged_mqa_logits_metadata
+drafter           2.0       6.0     3.0       6.0    0.1%  index_elementwise_kernel
+other             4.0       5.9     1.5       5.9    0.1%  cooperative_topk_cs8
+other             2.0       5.9     3.0       5.9    0.1%  _swa_decode_meta_multi_kernel
+sampler           1.0       5.9     5.9       5.9    0.1%  _rejection_kernel
+attention         3.0      18.9     6.3       5.7    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+drafter           1.0       5.3     5.3       5.3    0.1%  _prepare_dflash_inputs_multigroup_kernel
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+drafter           3.0       5.7     1.9       4.9    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0       4.7     4.7       4.7    0.1%  mhc_post_tilelang_kernel
+after: , restarts 0, telemetry: {"at_boot": false, "cold": 346, "cold_share": 0.003677721088435374, "drains": 114, "event": "drain", "freeze": false, "host_steps": 7296, "hot_moved": 1639, "pending": 24, "queued": 24, "sel": 94080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 4332,
+CELL_DONE profkb 10:51:54
+== CELL profkp  []  10:51:54
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 DS41_NSYS_WRAP=1 DS41_NSYS_TAG=profkp DS41_NSYS_DIR=/opt/nvidia/nsight-systems/2025.6.3 
+K7 in place, syntax ok
+serve.sh: K5 profile hook already present
+serve.sh syntax ok
+serving at 10:58:19; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 45.6 s, registered 0.25 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 1,397,980 tokens, Maximum concurrency for 262,144 tokens per request: 5.33x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+K7 lines in this boot: 10
+JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel va
+ds41 runs under the nsys wrap
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": false, "wall_s": 1.598, "steps": 186.0, "gen_tokens": 512.0, "tokens_per_step": 2.753, "ms_per_step_wall": 8.591, "to
+{"base": "http://127.0.0.1:30006", "model": "dsv41-flash-gracetier", "streams": 1, "max_tokens": 512, "profile": true, "start_profile": [200, ""], "stop_profile": [-1, "RemoteDisconnected('Remote end closed connection without resp
+Generating '/tmp/nsys-report-7caa.qdstrm'
+[1/1] [0%                          ] profkp.nsys-repProcessing events...
+[1/1] [0%                          ] profkp.nsys-rep[1/1] [5%                          ] profkp.nsys-rep[1/1] [7%                          ] profkp.nsys-rep[1/1] [9%                          ] pro
+	/prof/profkp/profkp.nsys-rep
+nsys export rc=0 (17M)
+table rc=0 -> /raid/work/logs/k5/profkp/table.txt (101 lines)
+trace=/raid/work/logs/k5/profkp/profkp.sqlite
+steps=184  step_wall_median_ms=8.262  mean_ms=8.378  gpu_busy_ms=8.149 (99.1%)  sum_of_kernel_ms=10.192  kernels/step=786
+# gap test: busy close to wall means no idle; sum_of_kernel above busy means kernels overlap (side streams, PDL).
+# tracing inflates every kernel a little: compare step_wall here with the untraced ms/step before trusting shares.
+
+duration histogram (per step)
+      0-3 us:   146.4 kernels      261.7 us
+      3-6 us:   211.3 kernels      950.4 us
+     6-10 us:   120.5 kernels      965.8 us
+    10-20 us:   214.8 kernels     2434.7 us
+    20-50 us:    48.5 kernels     1270.5 us
+     >=50 us:    49.3 kernels     4347.9 us
+  under 20 us: 693.0 kernels/step, 4612.6 us/step
+
+# us/step = sum of CUPTI durations (with PDL this includes time a kernel sat resident before its wait).
+# frontier = time the kernel extended the busy frontier (what it adds to the serial chain). Rank fusions by frontier.
+# share = frontier us/step over the mean step wall.
+
+group      calls/step   us/step  frontier   share
+attention       352.0    3145.0    2135.7   25.5%
+moe_hot          80.0    3932.1    3777.4   45.1%
+gt_stage         40.0     364.3     244.9    2.9%
+engram            4.0      32.4      32.4    0.4%
+drafter          87.6     762.5     558.7    6.7%
+head              2.0     417.9     417.7    5.0%
+sampler           2.0      15.5       7.1    0.1%
+other           223.2    1561.4    1011.0   12.1%
+(idle)                              193.2    2.3%
+
+group      calls/step   us/step  avg us  frontier   share  kernel
+moe_hot          40.0    3473.7    86.8    3470.6   41.4%  sm100_fp8_fp4_mega_moe_impl
+attention        38.0     972.0    25.6     927.2   11.1%  void sm100::prefill::fused_norm_rope_attn_rope_cast_fwd::core_attn::fwd_kernel<sm100::pref
+attention       120.0    1111.8     9.3     576.2    6.9%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+other            79.0     944.2    11.9     507.4    6.1%  mix_kernel
+head              2.0     417.9   208.9     417.7    5.0%  nvjet_sm103_tst_128x8_64x12_2x1_v_bz_TNT
+attention        40.0     426.9    10.7     373.4    4.5%  sm100_fp8_fp4_gemm_1d1d_impl
+other            79.0     381.6     4.8     336.3    4.0%  seam_kernel
+moe_hot          40.0     458.4    11.5     306.8    3.7%  router_kernel
+gt_stage         40.0     364.3     9.1     244.9    2.9%  gt_stage_sfp_kernel
+drafter           3.0     128.9    43.0     128.6    1.5%  sm100_fp8_fp4_mega_moe_impl
+other             9.0     109.1    12.1      71.7    0.9%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+drafter           1.0      67.0    67.0      67.0    0.8%  markov_kernel
+attention        40.0      74.3     1.9      62.6    0.8%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0      57.8    57.8      55.9    0.7%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100Sm100BlockScaledPersistentDen
+attention         8.0      51.5     6.4      50.6    0.6%  sm100_paged_mqa_logits
+drafter           3.0      58.4    19.5      49.4    0.6%  attn_ss_kernel
+drafter          10.0      83.6     8.4      47.0    0.6%  kernel_cutlass_kernel_flashinfergemmkernelscute_dsllow_latency_blockscaled_gemmLowLatencyBlockscaled
+attention        43.0     247.6     5.8      42.0    0.5%  stage_kernel
+drafter           5.0      55.0    11.0      40.2    0.5%  mega_mix_kernel
+drafter           3.0      80.2    26.7      29.4    0.3%  sm100_fp8_fp4_gemm_1d1d_impl
+engram            2.0      24.8    12.4      24.8    0.3%  _engram_lookup_kernel
+drafter           1.0      23.7    23.7      19.9    0.2%  mix_kernel
+drafter          15.8      35.1     2.2      16.3    0.2%  vectorized_elementwise_kernel
+drafter           5.0      21.6     4.3      16.3    0.2%  mega_seam_kernel
+attention        12.0      81.6     6.8      14.2    0.2%  Kernel2
+attention         4.0      13.8     3.4      13.8    0.2%  _mask_candidates_kernel
+drafter           1.0      17.3    17.3      13.6    0.2%  kernel_cutlass_kernel_flashinfergemmkernelsdense_blockscaled_gemm_sm100_splitkSm100BlockScaledSplitK
+attention         4.0      13.6     3.4      13.6    0.2%  _candidate_flags_kernel
+attention         4.0      13.0     3.3      13.0    0.2%  topk_global_cs8
+drafter           6.0      13.4     2.2      12.1    0.1%  rms_norm_kernel
+drafter           1.0      12.1    12.1      12.1    0.1%  _match_chain_kernel
+other             2.0      10.5     5.2      10.1    0.1%  mhc_post_tilelang_kernel
+attention         4.0       9.1     2.3       9.0    0.1%  _indexer_k_norm_rope_quant_store_kernel
+other             8.0      15.8     2.0       8.4    0.1%  kernel_cutlass_device_kernel_tensorptri64gmemo1_tensorptrbf16gmemalign32o32128i64div16i64div161_tens
+attention         4.0       8.1     2.0       8.1    0.1%  _compute_global_topk_indices_and_lens_kernel
+other             7.0       7.7     1.1       7.7    0.1%  vectorized_elementwise_kernel
+engram            2.0       7.6     3.8       7.6    0.1%  _fused_engram_post_wkv_kernel
+attention         4.0      19.2     4.8       7.5    0.1%  _fused_save_compress_norm_kernel
+attention         2.0      30.2    15.1       6.4    0.1%  attn_ss_kernel
+attention         2.0       6.6     3.3       6.3    0.1%  sm100_paged_mqa_logits_metadata
+other             3.0       6.2     2.1       6.2    0.1%  fusedDeepseekV4QNormRopeKVRopeQuantInsertKernel
+other             2.0       5.9     3.0       5.9    0.1%  _swa_decode_meta_multi_kernel
+drafter           2.0       5.8     2.9       5.8    0.1%  index_elementwise_kernel
+attention         3.0      18.8     6.3       5.7    0.1%  nvjet_sm103_tss_64x8_64x16_4x1_v_bz_splitK_TNT
+other             4.0       5.4     1.3       5.4    0.1%  cooperative_topk_cs8
+drafter           1.0       5.2     5.2       5.2    0.1%  _prepare_dflash_inputs_multigroup_kernel
+other             1.0       5.0     5.0       5.0    0.1%  _hash_ids_kernel
+sampler           1.0       4.9     4.9       4.9    0.1%  _rejection_kernel
+drafter           3.0       5.6     1.9       4.8    0.1%  kernel_cutlass_kernel_flashinferquantizationkernelsmxfp8_quantizeMXFP8QuantizeSwizzledKernel_object_
+drafter           1.0       4.8     4.8       4.8    0.1%  mhc_post_tilelang_kernel
+after: , restarts 0, telemetry: {"at_boot": false, "cold": 357, "cold_share": 0.003794642857142857, "drains": 114, "event": "drain", "freeze": false, "host_steps": 7296, "hot_moved": 1637, "pending": 28, "queued": 28, "sel": 94080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 4330,
+CELL_DONE profkp 10:59:42
+== CELL serve524r  []  10:59:42
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 298 -> /raid/work/run/cells/hot-298.json
+make_rowmap_allres: 40 layers, H=298 (per-layer [298]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-298.json, all entries >= 0, permutat
+serving at 11:05:52; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [298], G = 384, 20640 cold tensors in Grace (56.69 GiB, read 47.1 s, registered 0.22 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 931,005 tokens, Maximum concurrency for 524,288 tokens per request: 1.78x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+after: ds41 Up 6 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 2351, "cold_share": 0.022162518853695325, "drains": 99, "event": "drain", "freeze": false, "host_steps": 6336, "hot_moved": 1638, "pending": 25, "queued": 25, "sel": 106080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 4047
+CELL_DONE serve524r 11:06:55
+end 2026-11-19T11:06:55Z
+DONE

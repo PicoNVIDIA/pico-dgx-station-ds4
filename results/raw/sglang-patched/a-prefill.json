@@ -1,0 +1,195 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T04:55:29+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl2-20261119T034657Z/a-prefill.json",
+  "env_file": null,
+  "skip": "fixed,gsm8k_c1,greedy_c1,coding,streams,capacity,quality",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "prefill": {
+  "shape": "distinct random-word filler + per-request cache_salt (no prefix-cache hit), max_tokens 1",
+  "rows": [
+   {
+    "target_tokens": 16384,
+    "runs": [
+     {
+      "prompt_tokens": 14247,
+      "completion_tokens": 1,
+      "ttft_ms": 3845.9,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 3704.5
+     },
+     {
+      "prompt_tokens": 14320,
+      "completion_tokens": 1,
+      "ttft_ms": 3042.8,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 4706.2
+     },
+     {
+      "prompt_tokens": 14205,
+      "completion_tokens": 1,
+      "ttft_ms": 1032.4,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 13759.2
+     }
+    ],
+    "prompt_tokens": {
+     "n": 3,
+     "median": 14247,
+     "q1": 14226.0,
+     "q3": 14283.5
+    },
+    "ttft_ms": {
+     "n": 3,
+     "median": 3042.8,
+     "q1": 2037.6,
+     "q3": 3444.35
+    },
+    "prefill_tok_s": {
+     "n": 3,
+     "median": 4706.2,
+     "q1": 4205.35,
+     "q3": 9232.7
+    }
+   },
+   {
+    "target_tokens": 65536,
+    "runs": [
+     {
+      "prompt_tokens": 56859,
+      "completion_tokens": 1,
+      "ttft_ms": 11100.9,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 5122.0
+     },
+     {
+      "prompt_tokens": 56920,
+      "completion_tokens": 1,
+      "ttft_ms": 3972.3,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 14329.2
+     },
+     {
+      "prompt_tokens": 56805,
+      "completion_tokens": 1,
+      "ttft_ms": 3959.1,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 14348.0
+     }
+    ],
+    "prompt_tokens": {
+     "n": 3,
+     "median": 56859,
+     "q1": 56832.0,
+     "q3": 56889.5
+    },
+    "ttft_ms": {
+     "n": 3,
+     "median": 3972.3,
+     "q1": 3965.7,
+     "q3": 7536.6
+    },
+    "prefill_tok_s": {
+     "n": 3,
+     "median": 14329.2,
+     "q1": 9725.6,
+     "q3": 14338.6
+    }
+   },
+   {
+    "target_tokens": 131072,
+    "runs": [
+     {
+      "prompt_tokens": 113566,
+      "completion_tokens": 1,
+      "ttft_ms": 7910.2,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 14356.9
+     },
+     {
+      "prompt_tokens": 113844,
+      "completion_tokens": 1,
+      "ttft_ms": 7932.3,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 14352.0
+     },
+     {
+      "prompt_tokens": 113685,
+      "completion_tokens": 1,
+      "ttft_ms": 7931.3,
+      "out_tok_s": null,
+      "tokens_per_step": null,
+      "steps_s": null,
+      "content_chunks": 1,
+      "prefill_tok_s": 14333.7
+     }
+    ],
+    "prompt_tokens": {
+     "n": 3,
+     "median": 113685,
+     "q1": 113625.5,
+     "q3": 113764.5
+    },
+    "ttft_ms": {
+     "n": 3,
+     "median": 7931.3,
+     "q1": 7920.75,
+     "q3": 7931.8
+    },
+    "prefill_tok_s": {
+     "n": 3,
+     "median": 14352.0,
+     "q1": 14342.85,
+     "q3": 14354.45
+    }
+   }
+  ]
+ },
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-19T04:56:19+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

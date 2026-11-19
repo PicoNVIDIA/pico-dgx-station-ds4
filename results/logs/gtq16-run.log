@@ -1,0 +1,47 @@
+start 2026-11-19T05:53:17Z
+== CELL score524  [full id]  05:53:17
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 298 -> /raid/work/run/cells/hot-298.json
+make_rowmap_allres: 40 layers, H=298 (per-layer [298]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-298.json, all entries >= 0, permutat
+serving at 05:59:25; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [298], G = 384, 20640 cold tensors in Grace (56.69 GiB, read 49.6 s, registered 0.24 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 934,717 tokens, Maximum concurrency for 524,288 tokens per request: 1.78x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+score524-score: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 566.8 (545.6-591.8) | 122 (121-125) | 5.57 (5.47-5.63) | 102.2 (100.0-103.5) | 5 |
+score524-score: | coding prompt (2,048 out, greedy, thinking off) | 610.0 (565.9-623.5) | 163 (162-171) | 6.10 (5.90-6.23) | 96.6 (92.9-100.2) | 5 |
+score524-score: | GSM8K decode, T=1.0, thinking on (60 s window) | 417.9 | — | 3.783 | — | window |
+score524-score: | GSM8K decode, greedy, thinking off (60 s window) | 510.8 | — | 4.694 | — | window |
+score524-score: | 2 | 626 | 313.0 | 3.877 | 60 |
+score524-score: | 4 | 860 | 215.1 | 3.67 | 60 |
+score524-score: | 8 | 1,204 | 150.5 | 3.066 | 60 |
+score524-score: | 16 | 1,682 | 105.2 | 3.044 | 60 |
+score524-score: | 32 | 2,237 | 69.9 | 3.053 | 60 |
+score524-score: | 14218 (14218-14234) | 310 (294-338) | 45920 (42373-48576) |
+score524-score: | 56873 (56806-56875) | 1067 (1064-1078) | 53182 (52684-53408) |
+score524-score: | 113659 (113658-113664) | 2149 (2138-2156) | 52894 (52711-53155) |
+score524-score: | GSM8K-200 (thinking on, T=0.3) | 196/200 (98.0 %) |
+score524-score: | needles at 200K tokens | 3/3 |
+score524-score: GPU KV cache: ? tokens. 16 distinct ~110,000-token contexts decoding 2,500 forced tokens each, plus one needle request: not all ran at once (max running 11.0, max waiting 13.0), 0 preemptions, peak KV use 93 %, wall 71.1 s, all requests correct.
+score524-score: | tool call | PASS |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq16-score524-c1.json
+score524-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K6 stage skip: steps 36864 copies 722881 skipped 182773 (20.2 % of staged experts; last 64 steps: 1993 / 331) audited 0 mismatch_words 0 swap_invalidations 15827 lanes 1 enabled 1
+K6 stage skip: steps 40960 copies 834678 skipped 200958 (19.4 % of staged experts; last 64 steps: 2226 / 257) audited 0 mismatch_words 0 swap_invalidations 16377 lanes 1 enabled 1
+K6 stage skip: steps 45056 copies 1012224 skipped 219821 (17.8 % of staged experts; last 64 steps: 4432 / 327) audited 0 mismatch_words 0 swap_invalidations 16673 lanes 1 enabled 1
+K6 stage skip: steps 49152 copies 1557317 skipped 239739 (13.3 % of staged experts; last 64 steps: 34201 / 12) audited 0 mismatch_words 0 swap_invalidations 16892 lanes 1 enabled 1
+K6 stage skip: steps 53248 copies 2019194 skipped 270300 (11.8 % of staged experts; last 64 steps: 10011 / 860) audited 0 mismatch_words 0 swap_invalidations 18678 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2093735, "copied_since": 1488, "enabled": true, "event": "stage_skip", "host_steps": 55616, "lanes": 1, "mismatch_words": 0, "skipped": 298695, "skipped_since": 624, "swap_invalidations": 19994
+after: ds41 Up 19 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3083, "cold_share": 0.028802316890881915, "drains": 869, "event": "drain", "freeze": false, "host_steps": 55616, "hot_moved": 1646, "pending": 30, "queued": 30, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 19
+CELL_DONE score524 06:13:12
+end 2026-11-19T06:13:12Z
+DONE

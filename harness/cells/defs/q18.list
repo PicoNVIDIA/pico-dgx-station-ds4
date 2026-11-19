@@ -1,0 +1,6 @@
+# K7 gates on the 262K final. Speed cells come only after these are read.
+k7ctlA|c1 s:8,32x1 id
+k7ctlB|c1 s:8,32x1 id
+k7audit|c1 s:8x1 id
+k7auditx|c1
+serve524|

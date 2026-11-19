@@ -1,0 +1,40 @@
+--- a/serve/serve.sh
++++ b/serve/serve.sh
+@@ -311,6 +311,17 @@
+                 -v "$DS41_SITECUSTOMIZE:$DS41_SITE_TARGET:ro"
+                 -v "$DS41_FASTPATH_DIR:/fastpath:ro"
+                 "${OVERLAY_MOUNTS[@]}")
++  # K5 profile hook (after Meadlock's w0 patch 06): a no-op unless DS41_NSYS_WRAP=1 or DS41_TORCH_PROF=1.
++  local nsysmnt=() nsyspfx=() nsysprof=()
++  if [ "${DS41_NSYS_WRAP:-0}" = 1 ]; then
++    mkdir -p "$DS41_CACHE_DIR/prof/${DS41_NSYS_TAG:-K5}"
++    nsysmnt=(-v "${DS41_NSYS_DIR:-/opt/nvidia/nsight-systems/2025.6.3}:/nsys:ro")
++    nsyspfx=(/nsys/target-linux-sbsa-armv8/nsys profile --trace=cuda,nvtx "--cuda-graph-trace=${DS41_NSYS_GRAPH:-node}" --sample=none --cpuctxsw=none --capture-range=cudaProfilerApi "--capture-range-end=${DS41_NSYS_END:-stop-shutdown}" --force-overwrite=true -o "/prof/${DS41_NSYS_TAG:-K5}/${DS41_NSYS_TAG:-K5}")
++    nsysprof=(--profiler-config.profiler=cuda)
++  elif [ "${DS41_TORCH_PROF:-0}" = 1 ]; then
++    mkdir -p "$DS41_CACHE_DIR/prof/${DS41_NSYS_TAG:-K5}"
++    nsysprof=(--profiler-config.profiler=torch "--profiler-config.torch_profiler_dir=/prof/${DS41_NSYS_TAG:-K5}")
++  fi
+   # Every variable below is read by vLLM or by the mounted hook/fastpath; the fastpath's tuning values are code
+   # constants in its components, not container env.
+   local envs=(-e HF_HUB_OFFLINE=1 -e "VLLM_LOGGING_LEVEL=$DS41_LOG_LEVEL" -e CUDA_LOG_FILE=stderr
+@@ -335,8 +346,8 @@
+   log "starting GB300 vLLM on $GB300_NAME ($GB300_UUID); util=$DS41_UTIL, reserve=${DS41_GPU_RESERVE_MIB} MiB, rowmap=$DS41_ROWMAP, maxlen=$DS41_MAXLEN"
+   docker run -d --name ds41 --restart no "${dev[@]}" --ipc host --network host \
+     --cap-add SYS_NICE --cap-add IPC_LOCK --ulimit memlock=-1 --ulimit stack=67108864 --security-opt label=disable \
+-    "${keyargs[@]}" "${mounts[@]}" "${envs[@]}" --entrypoint /usr/bin/numactl "$DS41_IMAGE" --membind=0 \
+-    vllm serve --model /model --served-model-name "$DS41_SERVED" "${aliases[@]}" --trust-remote-code \
++    "${keyargs[@]}" "${mounts[@]}" "${nsysmnt[@]}" "${envs[@]}" --entrypoint /usr/bin/numactl "$DS41_IMAGE" --membind=0 \
++    "${nsyspfx[@]}" vllm serve --model /model --served-model-name "$DS41_SERVED" "${aliases[@]}" --trust-remote-code \
+     --tensor-parallel-size 1 --moe-backend deep_gemm_mega_moe --enable-expert-parallel \
+     --engram-config '{"cpu_offload": true}' --max-model-len "$DS41_MAXLEN" --max-num-seqs "$DS41_SEQS" \
+     --max-num-batched-tokens 8192 --gpu-memory-utilization "$DS41_UTIL" --kv-cache-dtype "$DS41_KV" \
+@@ -345,7 +356,7 @@
+     --long-prefill-token-threshold 6144 --enable-prefix-caching "${spec[@]}" \
+     --cudagraph-capture-sizes 1 2 4 6 8 12 16 18 20 24 28 32 36 40 48 56 64 72 80 96 128 144 160 192 224 256 \
+     "${genover[@]}" \
+-    "${effort[@]}" "${offload[@]}" \
++    "${effort[@]}" "${offload[@]}" "${nsysprof[@]}" \
+     --host 0.0.0.0 --port "$DS41_PORT" >/dev/null
+   local t=0 summary
+   while :; do

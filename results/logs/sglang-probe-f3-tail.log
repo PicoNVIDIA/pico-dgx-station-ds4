@@ -1,0 +1,60 @@
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 536, in __init__
+    self.initialize()
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 760, in initialize
+    self.load_model()
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner.py", line 1417, in load_model
+    loaded = load_model_with_memory_saver(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_executor/model_runner_components/load_model_utils.py", line 438, in load_model_with_memory_saver
+    model = loader.load_model(
+            ^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_loader/loader.py", line 1052, in load_model
+    model = _initialize_model(
+            ^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/model_loader/loader.py", line 348, in _initialize_model
+    model = model_class(**kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v4.py", line 4885, in __init__
+    self.model = DeepseekV4Model(
+                 ^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v4.py", line 3978, in __init__
+    self.layers, self.start_layer, self.end_layer = make_pp_layers(
+                                                    ^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/utils/layer_list.py", line 123, in make_pp_layers
+    return make_layers(
+           ^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/utils/layer_list.py", line 94, in make_layers
+    + get_offloader().wrap_modules(
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/offloader.py", line 147, in wrap_modules
+    return [self.maybe_offload_to_cpu(module) for module in all_modules_generator]
+                                                            ^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/utils/layer_list.py", line 95, in <genexpr>
+    (build(stack, idx) for idx in range(start_layer, end_layer)),
+     ^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/utils/layer_list.py", line 81, in build
+    layer = layer_fn(idx=idx, prefix=add_prefix(idx, prefix))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v4.py", line 3980, in <lambda>
+    lambda idx, prefix: DeepseekV4DecoderLayer(
+                        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v4.py", line 3717, in __init__
+    super().__init__(*args, **kwargs)
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v4.py", line 3274, in __init__
+    self.mlp = deepseek_v2.DeepseekV2MoE(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/models/deepseek_v2.py", line 760, in __init__
+    self.experts = get_moe_impl_class(quant_config)(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/moe/fused_moe_triton/layer.py", line 607, in __init__
+    self.quant_method.create_weights(
+  File "/sgl-workspace/sglang/python/sglang/srt/layers/quantization/mxfp4_flashinfer_trtllm_moe.py", line 188, in create_weights
+    torch.empty(
+  File "/opt/sglang/lib/python3.12/site-packages/torch/utils/_device.py", line 122, in __torch_function__
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 4.22 GiB. GPU 0 has a total capacity of 249.81 GiB of which 1.36 GiB is free. Including non-PyTorch memory, this process has 248.44 GiB memory in use. Of the allocated memory 247.52 GiB is allocated by PyTorch, and 70.59 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-
+
+[2026-11-19 03:44:14] Received sigquit from a child process. It usually means the child failed.
+[2026-11-19 03:44:14] kill_process_tree called: parent_pid=1, include_parent=True, pid=1
+[2026-11-19 03:44:14] kill_process_tree called: parent_pid=1, include_parent=False, pid=1

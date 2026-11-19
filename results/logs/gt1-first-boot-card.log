@@ -1,0 +1,47 @@
+2026-11-18 17:50:44 UTC [gt1] == card GT1 preflight (window station-first-boot) log /raid/work/logs/gt1/gt1-window-20261118-175044.log
+2026-11-18 17:50:44 UTC [gt1] preflight OK: commit fadc3d2 receipts: scrub a LAN scraper address from server logs (gt3, gt4, a4-h275, a5); dirty []; GPU NVIDIA GB300, GPU-<redacted>, 1 MiB, 256703 MiB, 0 %; apps []; MemAvailable 448.2 GiB; :30006 serves []; restore Pg61 at end: 0 (GT1_RESTORE=never)
+2026-11-18 17:50:44 UTC [gt1] == Pg61 down
+2026-11-18 17:50:45 UTC [gt1] Pg61 down rc=0 (2026-11-18 17:50:45 UTC [pg61] down; peer shm removed (verified absent), containers stopped, watchdog stopped)
+2026-11-18 17:50:50 UTC [gt1] GPU memory.used 1 MiB, compute apps 0
+2026-11-18 17:50:50 UTC [gt1] == build /raid/work/gt/gracetier (copy of /raid/work/gt/garner-shim/pg61-work/tree + gracetier)
+2026-11-18 17:50:51 UTC [gt1] applied patches/0001-boundary-gracetier.patch (5 hunks, clean)
+2026-11-18 17:50:51 UTC [gt1] applied patches/0002-components-gracetier.patch (2 hunks, clean)
+warning: serve/serve.sh has type 100755, expected 100644
+2026-11-18 17:50:51 UTC [gt1] applied serve-gracetier.patch (4 hunks, clean)
+2026-11-18 17:50:51 UTC [gt1] residency: gracetier-res.json = {"mode": "adaptive", "freeze": false, "hyst": 3.0}; gracetier_rt + gracetier_res residency_policy
+make_rowmap_allres: 40 layers, H=255 (per-layer [255]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map None, all entries >= 0, permutation per layer -> /raid/work/gt/gracetier/tree/fastpath/hook/rowmap-allres.json sha256 51da2571cc98aeac
+policy.env: DS41_PORT=30006 DS41_SERVED=dsv41-flash-gracetier DS41_ALIASES=deepseek-v4.1-flash DS41_GPU_MODE=cdi DS41_NO_KEY=1 DS41_MAXLEN=1048576 DS41_KV=fp8_ds_mla DS41_OFFLOAD_GB=48 DS41_EFFORT_DEFAULT=0 DS41_OVERLAY_58132_DIR=/raid/work/gt/gracetier/overlay-vllm DS41_PEER3_SPINS=1000000000000
+2026-11-18 17:50:51 UTC [gt1] launch-gt1.sh: 19 changed lines vs launch-pg61.sh
+2026-11-18 17:50:51 UTC [gt1] built: 129 files hashed; component 543d89204e4e087b; rowmap-allres 51da2571cc98aeac
+2026-11-18 17:50:51 UTC [gt1] == boot gracetier on :30006 (dsv41-flash-gracetier)
+2026-11-18 18:00:09 UTC [gt1] up rc=0 (2026-11-18 18:00:09 UTC [pg61] UP on :30006 (gracetier: no RTX sidecar, no p3 watchdog) 2026-11-18 18:00:09 UTC [pg61] soak clock started: {"soak_start_utc": "2026-11-18T18:00:09Z", "soak_start_local")
+G1: up rc 0; ACTIVE gracetier yes; post-load budget fits True; components ACTIVE 23; fatal lines 0 -> PASS
+    DS41_FASTPATH gracetier: HOST_RAM_BUDGET [pre-alloc: the cold pool must fit now; Engram / KV residency is checked after load_model] engram 189.13 GiB (resident) + cold_pool 85.26 GiB (pending) + kv_offload 48.0 GiB (resident) = 322.39 GiB; MemAvailable 256.73 GiB - pending 85.26 GiB = headroom 171.47 GiB vs floor 32.0 GiB -> fits {"GiB": {"MemAvailable": 256.73, "cold_pool": 85.26, "engram": 189.1
+    DS41_FASTPATH gracetier: HOST_RAM_BUDGET [post-load: Engram + cold pool resident, KV overflow pending] engram 189.13 GiB (resident) + cold_pool 85.26 GiB (resident) + kv_offload 48.0 GiB (pending) = 322.39 GiB; MemAvailable 172.31 GiB - pending 48.0 GiB = headroom 124.31 GiB vs floor 32.0 GiB -> fits {"GiB": {"MemAvailable": 172.31, "cold_pool": 85.26, "engram": 189.13, "floor": 32.0, "headroom": 
+    DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [255], G = 384, 30960 cold tensors in Grace (85.26 GiB, read 57.1 s, registered 0.38 s); VMM {"alloc_bytes": 182886334464, "allocs": [["shared.l1", 1520435200], ["shared.l2", 759169024], ["L0.l1.private", 3009413120], ["L0.l2.private", 1505755136], ["L1.l1.private", 3009413120], ["L1.l2.private", 1505755136], ["L2.l1.private", 3009413120], ["L2.l2.pri
+    DS41_FASTPATH gracetier: parity slot0 layer 0 (our transform of the loader's raw hot slot 0 vs vLLM's finalized group 0): {"l1_sf": true, "l1_weight": true, "l2_sf": true, "l2_weight": true, "names": ["w13_weight", "w2_weight", "w13_weight_scale", "w2_weight_scale"], "ok": true}
+    (EngineCore pid=952) INFO 11-18 17:57:49 [kv_cache_utils.py:2464] GPU KV cache size: 8,360,311 tokens, Maximum concurrency for 1,048,576 tokens per request: 7.97x
+2026-11-18 18:00:10 UTC [gt1] == card GT3: adaptive residency cells R0..R5 (control + telemetry /raid/work/gt/gracetier/home/state/prof/gracetier-res)
+DS41_FASTPATH gracetier: residency config /fastpath/gracetier-res.json: {"freeze": false, "hyst": 3.0, "mode": "adaptive"}
+DS41_FASTPATH gracetier: GPUModelRunner.execute_model wrapped: residency barrier before every call
+DS41_FASTPATH gracetier: [gracetier-res] adaptive residency on 40 layers (H [255], G 384): drain_n 64 swaps/drain 2 cap/barrier 4 hyst 3.0 min_abs 8.0 halflife 500.0; freeze=0; ctrl + telemetry /prof/gracetier-res; boot digests 1.67 s
+DS41_FASTPATH gracetier: residency: manager over 40 layers; the SF banks it swaps are module._transformed_l1/l2_weights[1] as they are after load (40/40 layers retired by a12_retire into its compressible allocation); counter int32 (40, 384), counted calls <= 1536 ids; freeze=0
+DS41_FASTPATH gracetier: residency: first barrier: weights and SF banks of 40 layers unchanged since load_model
+DS41_FASTPATH gracetier: stream check: 64 eager gt_stage calls inside execute_model ran on the barrier's stream
+2026-11-18 18:00:10 UTC [gt1] == card A5 gracetier arm (config {"mode": "adaptive", "freeze": false, "hyst": 3.0})
+2026-11-18 18:00:34 UTC [a5 gracetier] warm-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 231.17 (20 timed); ms/step 13.379 tok/step 3.052 ms/token 4.384; per-prompt ms/step min 10.781 max 18.95
+2026-11-18 18:00:53 UTC [a5 gracetier] warm-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 253.97 (20 timed); ms/step 11.784 tok/step 2.954 ms/token 3.989; per-prompt ms/step min 9.549 max 18.1
+2026-11-18 18:01:12 UTC [a5 gracetier] c1-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 263.67 (20 timed); ms/step 11.706 tok/step 3.046 ms/token 3.844; per-prompt ms/step min 10.073 max 20.142
+2026-11-18 18:01:31 UTC [a5 gracetier] c1-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 262.97 (20 timed); ms/step 11.381 tok/step 2.954 ms/token 3.852; per-prompt ms/step min 9.339 max 18.6
+2026-11-18 18:01:51 UTC [a5 gracetier] c8 rc=0 conc C8: 40/40 ok, errors 0; aggregate 441.1 tok/s over 20.55 s; per-stream decode p50 75.25 min 47.52 tok/s; TTFT p50 0.133 max 3.362 s; alive True
+2026-11-18 18:02:17 UTC [a5 gracetier] c32 rc=0 conc C32: 64/64 ok, errors 0; aggregate 570.9 tok/s over 25.84 s; per-stream decode p50 25.08 min 13.13 tok/s; TTFT p50 2.166 max 3.575 s; alive True
+2026-11-18 18:02:35 UTC [a5 gracetier] c1-a2 rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 277.29 (20 timed); ms/step 11.132 tok/step 3.046 ms/token 3.655; per-prompt ms/step min 9.527 max 18.988
+2026-11-18 18:02:35 UTC [a5 gracetier] cells done
+2026-11-18 18:02:37 UTC [gt1] a5-audit rc=0 ctrl {"audit": {"moved": true, "random": 64}} seq 1795024955504: ack yes after 2.123 s / 2 nudges; ['audit mismatches=0']; settled(ack) True; state {"pending": 46, "at_boot": false, "freeze": false, "hot_moved": 1590, "swaps": 4813}; audit {"checked": 7263, "moved": 4703, "random": 2560, "mismatches": 0, "ms": 862.3}
+2026-11-18 18:02:37 UTC [gt1] container running restarts=0; alive yes
+2026-11-18 18:02:37 UTC [gt1] == finish (G1=pass G2=skip G3=res-a5 G4=skip G5=skip)
+2026-11-18 18:02:37 UTC [gt1] GT1_KEEP=1: gracetier left serving on :30006 as dsv41-flash-gracetier (stop: cd /raid/work/gt/gracetier && WORK=/raid/work/gt/gracetier DS41_HOME=/raid/work/gt/gracetier/home bash /raid/work/gt/gracetier/launch-gt1.sh down)
+2026-11-18 18:02:37 UTC [gt1] Pg61 was not serving at preflight (GT1_RESTORE=never): not restored, lane left as found
+GT1 VERDICT 20261118-175044: G1 ACTIVE+budget=pass; G2 parity vs Pg61 A: identical None/None, flips None, weighted None, max|dlogp| None (skip); G3 ms/step None ms/token None (Pg61 None / None) (res-a5); G4 C32 None/None >= None tok, alive None (skip); G5 TTFT mean None ms (skip); restore rc skipped
+2026-11-18 18:02:37 UTC [gt1] == END
+CARD_EXIT rc=0 2026-11-18T18:02:37Z

@@ -1,0 +1,113 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T04:44:22+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl2-20261119T034657Z/a-coding.json",
+  "env_file": null,
+  "skip": "fixed,gsm8k_c1,greedy_c1,streams,prefill,capacity,quality",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "coding": {
+  "shape": "verify/coding.py: coding module prompt, greedy, thinking off, exactly 2,048 output tokens",
+  "runs": [
+   {
+    "prompt_tokens": 4425,
+    "completion_tokens": 2048,
+    "ttft_ms": 646.4,
+    "out_tok_s": 135.7,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 4427,
+    "completion_tokens": 2048,
+    "ttft_ms": 646.1,
+    "out_tok_s": 135.6,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 4428,
+    "completion_tokens": 2048,
+    "ttft_ms": 645.2,
+    "out_tok_s": 135.7,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 4427,
+    "completion_tokens": 2048,
+    "ttft_ms": 649.1,
+    "out_tok_s": 135.6,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   },
+   {
+    "prompt_tokens": 4428,
+    "completion_tokens": 2048,
+    "ttft_ms": 646.4,
+    "out_tok_s": 135.7,
+    "tokens_per_step": null,
+    "steps_s": null,
+    "content_chunks": 2048
+   }
+  ],
+  "summary": {
+   "out_tok_s": {
+    "n": 5,
+    "median": 135.7,
+    "q1": 135.6,
+    "q3": 135.7
+   },
+   "ttft_ms": {
+    "n": 5,
+    "median": 646.4,
+    "q1": 646.1,
+    "q3": 646.4
+   },
+   "tokens_per_step": {
+    "n": 0
+   },
+   "steps_s": {
+    "n": 0
+   },
+   "completion_tokens": {
+    "n": 5,
+    "median": 2048,
+    "q1": 2048.0,
+    "q3": 2048.0
+   },
+   "prompt_tokens": {
+    "n": 5,
+    "median": 4427,
+    "q1": 4427.0,
+    "q3": 4428.0
+   }
+  }
+ },
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-19T04:46:06+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

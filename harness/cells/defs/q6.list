@@ -1,0 +1,7 @@
+# name|profile   (see station_cells.sh). Base for these cells: 285 hot at utilization 0.97.
+stagelog|c1 s:8,32x1 id
+h288|c1 s:8,32x2 id
+h292u98|c1 s:2,4,8,16,32x2 pf id
+ord3|c1 s:8,32x1 id
+k1f7h|c1 id
+k1f3h|c1 id

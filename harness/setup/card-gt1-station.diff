@@ -1,0 +1,42 @@
+--- a/card-gt1.sh	2026-11-18 10:33:03
++++ b/card-gt1.sh	2026-11-18 10:33:03
+@@ -53,11 +53,12 @@
+ PIN=8043a6811a5feda70fdfb6e827eebb2ec25c65d1
+ PORT=30006; SERVED=dsv41-flash-gracetier; BASE=http://127.0.0.1:$PORT
+ IMAGE=vllm/vllm-openai:v0.31.0
+-LO1=$HOME/dsv41/m3/LANE-OWNER.txt; LO2=$HOME/dsv41/m3/logs/LANE-OWNER.txt
+-MF=$HOME/dsv41/m3/logs/MAINTENANCE
++LANE=${GT1_LANE_DIR:-$HOME/dsv41/m3}; mkdir -p "$LANE/logs"   # station: the author's lane-owner files, anywhere writable
++LO1=$LANE/LANE-OWNER.txt; LO2=$LANE/logs/LANE-OWNER.txt
++MF=$LANE/logs/MAINTENANCE
+ P=$DEC/port/garner
+ STAMP=$(date +%Y%m%d-%H%M%S)
+-S=$DEC/scratch
++S=${GT1_SCRATCH:-$DEC/scratch}   # station: receipts outside the source checkout
+ LOG=$S/gt1-window-$STAMP.log
+ BUSY_USED_MIB=8192
+ ts() { date '+%F %T %Z'; }
+@@ -173,8 +174,12 @@
+   if docker ps -a --format '{{.Names}}' | grep -qx ds41 && [ "$GT_UP" = 1 ]; then
+     docker logs ds41 > "$S/gt1-server-$STAMP.log" 2>&1 || true
+   fi
+-  [ "$GT_UP" = 1 ] && gt_down
+-  docker ps --format '{{.Names}}' | grep -qxE 'ds41|ds41-sidecar' && say "WARN: ds41 containers still up after down"
++  if [ "${GT1_KEEP:-0}" = 1 ] && [ "$G1" = pass ]; then   # station: no production lane to give the GPU back to
++    say "GT1_KEEP=1: gracetier left serving on :$PORT as $SERVED (stop: cd $GT && WORK=$GT DS41_HOME=$GT/home bash $GT/launch-gt1.sh down)"
++  else
++    [ "$GT_UP" = 1 ] && gt_down
++    docker ps --format '{{.Names}}' | grep -qxE 'ds41|ds41-sidecar' && say "WARN: ds41 containers still up after down"
++  fi
+   local rrc=skipped
+   if [ "$PG61_DOWN" = 1 ] && [ "$RESTORE_PG61" = 0 ]; then
+     say "Pg61 was not serving at preflight (GT1_RESTORE=${GT1_RESTORE:-auto}): not restored, lane left as found"
+@@ -459,7 +464,7 @@
+ 
+   if [ "${GT1_RES_CELLS:-std}" = a5 ]; then   # card A5, gracetier arm: the cells every arm runs (bench/box/a5-cells.sh)
+     say "== card A5 gracetier arm (config $(cat "$GT/tree/fastpath/gracetier-res.json"))"
+-    A5_OUT="$S/a5-gracetier-$STAMP" A5_ARM=gracetier A5_WARM=1 A5_GAUNTLET=1 bash bench/box/a5-cells.sh
++    A5_OUT="$S/a5-gracetier-$STAMP" A5_ARM=gracetier A5_WARM=1 A5_GAUNTLET=${GT1_A5_GAUNTLET:-1} A5_TTFT=${GT1_A5_TTFT:-0} bash bench/box/a5-cells.sh
+     alive && ctl a5-audit "$AUDIT" step ack
+     cp "$RESDIR/telemetry.jsonl" "$(R telemetry).jsonl" 2>/dev/null || say "WARN: no telemetry.jsonl to copy"
+     docker logs ds41 2>&1 | grep -E "gracetier: (residency|\[gracetier-res\]|stream check)" | cut -c1-600 > "$(R server-lines).log" || true

@@ -1,0 +1,78 @@
+--- a/fastpath/fastpath_w9_suffix.py	2026-11-18 12:50:50
++++ b/fastpath/fastpath_w9_suffix.py	2026-11-18 12:54:57
+@@ -29,6 +29,7 @@
+ 
+ from __future__ import annotations
+ 
++import os
+ import statistics
+ import sys
+ import time
+@@ -60,6 +61,28 @@
+ DYNK_EARLY = True  # decide in propose(), short Markov loop on K_LO
+ DYNK_BLOCK5 = False
+ BLOCK5_CHECK = False
++
++
++# K1 (Station sweep): the one-request normal draft count. serve.sh forwards these variables only when they are set
++# (K1-03 patch); unset = the shipped recipe (dynamic 5 or 7 drafts per normal step, 31 on copy runs).
++def _k1_int(name: str, lo: int, hi: int):
++    raw = os.environ.get(name, "").strip()
++    if not raw:
++        return None
++    val = int(raw)
++    if not lo <= val <= hi:
++        raise RuntimeError(f"suffix: {name}={raw} outside {lo}..{hi}")
++    return val
++
++
++K1_FIXED = _k1_int("DS41_K1_FIXED", 1, DSPARK_K)   # every one-request normal step verifies exactly this many drafts
++K1_LO = _k1_int("DS41_K1_LO", 1, DSPARK_K - 1)     # dynamic K's low arm (shipped: 5); the high arm stays DSPARK_K
++if K1_FIXED is not None and K1_LO is not None:
++    raise RuntimeError("suffix: set DS41_K1_FIXED or DS41_K1_LO, not both")
++if K1_LO is not None:
++    DYNK_LO = K1_LO
++    DYNK_PRIOR = (min(DYNK_PRIOR[0], 0.52 * DYNK_LO), DYNK_PRIOR[1], DYNK_PRIOR[2])  # prior mean <= the low arm
++DYNK_COST = os.environ.get("DS41_K1_COST", "").strip() or DYNK_COST   # step-time ratio hi : lo, or "auto"
+ 
+ # Shared between the scheduler and the model runner, which run in the same EngineCore process (TP1, uniproc).
+ STATE: dict = {"runner": None, "drafter": None, "wide_steps": 0, "normal_steps": 0,
+@@ -281,6 +304,9 @@
+             _log(f"skipping {dropped} multi-request {wide}-row decode graphs")
+         if DYNK:
+             add_single_request_decode_graph(self, module, 1 + DSPARK_K)
++        for k in (K1_FIXED, K1_LO):  # K1: the overridden one-request width gets its own FULL 1 x (1 + k) graph
++            if k is not None:
++                add_single_request_decode_graph(self, module, 1 + k)
+ 
+     def capture(self, *args, **kwargs):
+         out = orig_capture(self, *args, **kwargs)
+@@ -553,7 +579,7 @@
+     STATE["early_capable"] = True
+     if STATE["early_on"] and len(req_ids) == 1 and w9 is not None and slot is not None:
+         if not (TRIGGER > 0 and int(w9.lflag_host[slot]) >= TRIGGER):  # a wide step may follow: full loop
+-            k = DYN.choose(req_ids[0])
++            k = K1_FIXED if K1_FIXED is not None else DYN.choose(req_ids[0])
+             STATE["early"] = (req_ids[0], k)
+             n_run = k
+     loop.set_active(n_run)
+@@ -588,6 +614,8 @@
+             return K_WIDE
+     if early is not None:
+         return early
++    if K1_FIXED is not None:
++        return K1_FIXED
+     if DYN is not None and DYNK_EARLY and STATE["early_on"]:
+         STATE["early_fallback"] += 1
+     return DYN.choose(req.request_id) if DYN is not None else NORMAL_K
+@@ -626,6 +654,10 @@
+         return orig(self, *args, **kwargs)
+ 
+     cls.schedule = schedule
++    if K1_FIXED is not None or K1_LO is not None:
++        _log("K1 override: one-request normal steps verify "
++             + (f"exactly {K1_FIXED}" if K1_FIXED is not None else f"{DYNK_LO} or {DSPARK_K} (cost {DYNK_COST})")
++             + " drafts")
+     if DYN is None:
+         return
+     orig_stats = cls.make_spec_decoding_stats

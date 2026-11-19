@@ -1,0 +1,57 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T04:56:19+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl2-20261119T034657Z/a-quality.json",
+  "env_file": null,
+  "skip": "fixed,gsm8k_c1,greedy_c1,coding,streams,prefill,capacity",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "quality": {
+  "tool_call": {
+   "passed": true,
+   "output": "tool call PASS [('get_weather', '{\"city\": \"Denver\"}')]"
+  },
+  "needles_200k": {
+   "passed": true,
+   "found": 3,
+   "total": 3,
+   "lines": [
+    "needle depth=10% prompt_tokens=173517 time=12s PASS reply='violet-anchor-5817'",
+    "needle depth=50% prompt_tokens=173517 time=11s PASS reply='violet-anchor-5817'",
+    "needle depth=90% prompt_tokens=173517 time=7s PASS reply='violet-anchor-5817'"
+   ]
+  },
+  "gsm8k_200": {
+   "n": 200,
+   "correct": 195,
+   "acc": 97.5,
+   "runaways": 0,
+   "errors": 0,
+   "wall_s": 116,
+   "median_ctoks": 157,
+   "passed": true
+  }
+ },
+ "gates": {
+  "tool_call": true,
+  "needles": true,
+  "gsm8k": true,
+  "capacity": null
+ },
+ "finished": "2026-11-19T04:58:47+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

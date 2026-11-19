@@ -1,0 +1,67 @@
+start 2026-11-19T03:46:57Z
+waiting for DONE in /raid/work/logs/gtq14-latest/run.log
+box free 04:33:37
+  after cleanup: gpu 1 MiB; host used 43 GiB, free 313 GiB
+== A patched Paged Experts, 32 running requests 04:33:47
+A: HEALTH 200 after 528 s
+16:162:            raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+17:162:            pass  # sm_103 probe: gate removed
+106:[2026-11-19 04:41:14 PID281] Using FP8 KV cache but no scaling factors provided. Defaulting to scaling factors of 1.0.
+128:[2026-11-19 04:42:24 PID281] max_total_num_tokens=26681088, chunked_prefill_size=16384, max_prefill_tokens=16384, max_running_requests=32, context_len=262144, available_gpu_mem=28.25 GB
+e2b-a: last lines:
+[2026-11-19 04:42:34] INFO:     127.0.0.1:56656 - "POST /freeze_gc HTTP/1.1" 200 OK
+[2026-11-19 04:42:34] The server is fired up and ready to roll!
+[2026-11-19 04:42:36 PID281] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, full token usage: 0.00, window_128 token usage: 0.00, #running-req: 0, #queue-req: 0, #pending-token: 0, cuda graph: False, input throughput (token/s)
+[2026-11-19 04:42:37] INFO:     172.17.0.1:38804 - "GET /health HTTP/1.1" 200 OK
+smoke answer: '391'
+metrics: 467 sglang lines; generation counter: sglang:generation_tokens_total{engine_type="unified",is_streaming="false",model_name="dsv41-sglang"} 10.0
+-- a-fixed [fixed] 04:42:37
+a-fixed: rc=0
+a-fixed: fixed: 135.6 (135.6-135.8, n=5) tok/s; TTFT 440 (439-582, n=5) ms; out tokens 2048 (2048-2048, n=5); prompt 2670 (2670-2670, n=5)
+a-fixed: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 4864, full token usage: 0.00, #window_128 token: 768, window_128 token usage: 0.01, cuda graph: True, gen throughput (token/s): 136.60, #queue-req: 0
+-- a-coding [coding] 04:44:22
+a-coding: rc=0
+a-coding: coding: 135.7 (135.6-135.7, n=5) tok/s; TTFT 646 (646-646, n=5) ms; out tokens 2048 (2048-2048, n=5); prompt 4427 (4427-4428, n=5)
+a-coding: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 6656, full token usage: 0.00, #window_128 token: 768, window_128 token usage: 0.01, cuda graph: True, gen throughput (token/s): 136.76, #queue-req: 0
+-- a-c1 [gsm8k_c1,greedy_c1] 04:46:06
+a-c1: rc=0
+a-c1: gsm8k_c1: 57.0 tok/s over 60.0 s, request errors 0
+a-c1: greedy_c1: 126.2 tok/s over 60.0 s, request errors 0
+a-c1: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 256, full token usage: 0.00, #window_128 token: 256, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 147.90, #queue-req: 0
+-- a-streams [streams] 04:48:47
+a-streams: rc=0
+a-streams: 2 streams: 216.2 tok/s aggregate, 108.1 a stream, request errors 0
+a-streams: 4 streams: 299.3 tok/s aggregate, 74.8 a stream, request errors 0
+a-streams: 8 streams: 387.1 tok/s aggregate, 48.4 a stream, request errors 0
+a-streams: 16 streams: 389.2 tok/s aggregate, 24.3 a stream, request errors 0
+a-streams: 32 streams: 467.1 tok/s aggregate, 14.6 a stream, request errors 0
+a-streams: status PASS failed stages []
+  server: Decode batch, #running-req: 32, #full token: 14080, full token usage: 0.00, #window_128 token: 12288, window_128 token usage: 0.12, cuda graph: True, gen throughput (token/s): 680.63, #queue-req: 0
+-- a-prefill [prefill] 04:55:28
+a-prefill: rc=0
+a-prefill: prefill 14247 (14226-14284, n=3) tokens: 4706 (4205-9233, n=3) tok/s, TTFT 3043 (2038-3444, n=3) ms
+a-prefill: prefill 56859 (56832-56890, n=3) tokens: 14329 (9726-14339, n=3) tok/s, TTFT 3972 (3966-7537, n=3) ms
+a-prefill: prefill 113685 (113626-113764, n=3) tokens: 14352 (14343-14354, n=3) tok/s, TTFT 7931 (7921-7932, n=3) ms
+a-prefill: status PASS failed stages []
+  server: Decode batch, #running-req: 32, #full token: 14080, full token usage: 0.00, #window_128 token: 12288, window_128 token usage: 0.12, cuda graph: True, gen throughput (token/s): 680.63, #queue-req: 0
+-- a-quality [quality] 04:56:19
+a-quality: rc=0
+a-quality: quality: tool call True [tool call PASS [('get_weather', '{"city": "Denver"}')]]; needles 3/3 passed True; gsm8k {"n": 200, "correct": 195, "acc": 97.5, "runaways": 0, "errors": 0, "wall_s": 116, "median_ctoks": 157, "passed": true}
+a-quality: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 4096, full token usage: 0.00, #window_128 token: 512, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 137.15, #queue-req: 0
+a: host used 494 GiB, free 18 GiB; gpu 236885 MiB; restarts 0
+16:162:            raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+17:162:            pass  # sm_103 probe: gate removed
+106:[2026-11-19 04:41:14 PID281] Using FP8 KV cache but no scaling factors provided. Defaulting to scaling factors of 1.0.
+128:[2026-11-19 04:42:24 PID281] max_total_num_tokens=26681088, chunked_prefill_size=16384, max_prefill_tokens=16384, max_running_requests=32, context_len=262144, available_gpu_mem=28.25 GB
+e2b-a-after: last lines:
+[2026-11-19 04:58:46 PID281] Decode batch, #running-req: 1, #full token: 4096, full token usage: 0.00, #window_128 token: 512, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 137.51, #queue-req: 0
+[2026-11-19 04:58:47 PID281] Decode batch, #running-req: 1, #full token: 4096, full token usage: 0.00, #window_128 token: 512, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 135.94, #queue-req: 0
+[2026-11-19 04:58:47 PID281] Decode batch, #running-req: 1, #full token: 4096, full token usage: 0.00, #window_128 token: 512, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 137.15, #queue-req: 0
+[2026-11-19 04:58:47] INFO:     172.17.0.1:49330 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+  after cleanup: gpu 1 MiB; host used 29 GiB, free 483 GiB
+end 2026-11-19T04:58:55Z
+DONE

@@ -1,0 +1,70 @@
+start 2026-11-19T02:05:22Z
+== CELL a5f262  [a5x3]  02:05:22
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 302 -> /raid/work/run/cells/hot-302.json
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-302.json, all entries >= 0, permutat
+serving at 02:11:30; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 41.7 s, registered 0.19 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 528,727 tokens, Maximum concurrency for 262,144 tokens per request: 2.02x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+[a5 a5f262-r1] c1-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 343.03 (20 timed); ms/step 8.998 tok/step 3.046 ms/token 2.954
+[a5 a5f262-r1] c1-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 337.18 (20 timed); ms/step 8.876 tok/step 2.954 ms/token 3.004
+[a5 a5f262-r1] c8 rc=0 conc C8: 40/40 ok, errors 0; aggregate 675.3 tok/s over 13.41 s
+[a5 a5f262-r1] c32 rc=0 conc C32: 64/64 ok, errors 0; aggregate 1103.4 tok/s over 13.39 s
+[a5 a5f262-r1] c1-a2 rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 351.53 (20 timed); ms/step 8.769 tok/step 3.042 ms/token 2.883
+[a5 a5f262-r2] c1-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 349.0 (20 timed); ms/step 8.844 tok/step 3.046 ms/token 2.904
+[a5 a5f262-r2] c1-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 339.28 (20 timed); ms/step 8.821 tok/step 2.954 ms/token 2.986
+[a5 a5f262-r2] c8 rc=0 conc C8: 40/40 ok, errors 0; aggregate 777.1 tok/s over 11.66 s
+[a5 a5f262-r2] c32 rc=0 conc C32: 64/64 ok, errors 0; aggregate 1050.2 tok/s over 14.03 s
+[a5 a5f262-r2] c1-a2 rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 349.95 (20 timed); ms/step 8.82 tok/step 3.046 ms/token 2.896
+[a5 a5f262-r3] c1-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 350.14 (20 timed); ms/step 8.815 tok/step 3.046 ms/token 2.894
+[a5 a5f262-r3] c1-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 336.98 (20 timed); ms/step 8.881 tok/step 2.954 ms/token 3.006
+[a5 a5f262-r3] c8 rc=0 conc C8: 40/40 ok, errors 0; aggregate 774.3 tok/s over 11.71 s
+[a5 a5f262-r3] c32 rc=0 conc C32: 64/64 ok, errors 0; aggregate 1135.3 tok/s over 12.99 s
+[a5 a5f262-r3] c1-a2 rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 352.46 (20 timed); ms/step 8.757 tok/step 3.046 ms/token 2.875
+K6 stage skip: steps 4096 copies 145726 skipped 48219 (24.9 % of staged experts; last 64 steps: 880 / 414) audited 0 mismatch_words 0 swap_invalidations 3174 lanes 1 enabled 1
+K6 stage skip: steps 8192 copies 226719 skipped 79027 (25.8 % of staged experts; last 64 steps: 1495 / 517) audited 0 mismatch_words 0 swap_invalidations 4664 lanes 1 enabled 1
+K6 stage skip: steps 12288 copies 451969 skipped 105414 (18.9 % of staged experts; last 64 steps: 804 / 235) audited 0 mismatch_words 0 swap_invalidations 5515 lanes 1 enabled 1
+K6 stage skip: steps 16384 copies 677905 skipped 132195 (16.3 % of staged experts; last 64 steps: 770 / 281) audited 0 mismatch_words 0 swap_invalidations 6494 lanes 1 enabled 1
+K6 stage skip: steps 20480 copies 751010 skipped 159328 (17.5 % of staged experts; last 64 steps: 981 / 440) audited 0 mismatch_words 0 swap_invalidations 7369 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 942003, "copied_since": 976, "enabled": true, "event": "stage_skip", "host_steps": 22720, "lanes": 1, "mismatch_words": 0, "skipped": 171760, "skipped_since": 278, "swap_invalidations": 7610, "
+after: ds41 Up 10 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 1522, "cold_share": 0.014816978193146417, "drains": 355, "event": "drain", "freeze": false, "host_steps": 22720, "hot_moved": 1632, "pending": 2, "queued": 2, "sel": 102720, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 7610
+CELL_DONE a5f262 02:15:57
+== CELL soak262  [soak id]  02:15:57
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_STAGE_SKIP_AUDIT=200 
+K6 in place, syntax ok
+hot map: 40 layers x 302 -> /raid/work/run/cells/hot-302.json
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-302.json, all entries >= 0, permutat
+serving at 02:21:33; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 40.6 s, registered 0.23 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 524,651 tokens, Maximum concurrency for 262,144 tokens per request: 2.00x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+soak262-soak16: | 16 | 1,633 | 102.1 | 3.056 | 600 |
+soak262-soak: prefill rounds done 8; server log error lines 0; restarts 0; gpu MiB 255381
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq12-soak262-c1.json
+soak262-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K6 stage skip: steps 12288 copies 842877 skipped 96493 (10.3 % of staged experts; last 64 steps: 4772 / 386) audited 478 mismatch_words 0 swap_invalidations 5683 lanes 1 enabled 1
+K6 stage skip: steps 16384 copies 1160006 skipped 118471 (9.3 % of staged experts; last 64 steps: 4184 / 330) audited 591 mismatch_words 0 swap_invalidations 5861 lanes 1 enabled 1
+K6 stage skip: steps 20480 copies 1432810 skipped 140187 (8.9 % of staged experts; last 64 steps: 4657 / 381) audited 722 mismatch_words 0 swap_invalidations 5990 lanes 1 enabled 1
+K6 stage skip: steps 24576 copies 1696533 skipped 161267 (8.7 % of staged experts; last 64 steps: 3685 / 302) audited 833 mismatch_words 0 swap_invalidations 6115 lanes 1 enabled 1
+K6 stage skip: steps 28672 copies 1952604 skipped 195393 (9.1 % of staged experts; last 64 steps: 1884 / 1392) audited 1016 mismatch_words 0 swap_invalidations 6876 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 200, "audited": 1118, "copied": 2003672, "copied_since": 1396, "enabled": true, "event": "stage_skip", "host_steps": 30464, "lanes": 1, "mismatch_words": 0, "skipped": 214006, "skipped_since": 518, "swap_invalidations": 
+after: ds41 Up 17 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 2859, "cold_share": 0.02670964125560538, "drains": 476, "event": "drain", "freeze": false, "host_steps": 30464, "hot_moved": 1644, "pending": 29, "queued": 29, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 774
+CELL_DONE soak262 02:33:26
+end 2026-11-19T02:33:26Z
+DONE

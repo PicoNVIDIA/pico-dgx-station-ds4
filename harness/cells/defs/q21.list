@@ -1,0 +1,3 @@
+# Long soak of the 1M final (about 3.5 h), then quality and identity on the same boot, then serve the 1M final.
+soak1m|lsoak:4 q id
+serve1m|

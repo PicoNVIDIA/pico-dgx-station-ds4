@@ -1,0 +1,174 @@
+start 2026-11-18T21:27:57Z
+== CELL stagelog  [c1 s:8,32x1 id]  21:27:57
+policy additions: DS41_UTIL=0.97 DS41_GT_STAGE_LOG=/prof/gracetier-res/k4-stage.jsonl DS41_GT_STAGE_LOG_PICKS=1 
+patching file tree/fastpath/fastpath_gracetier.py
+serve.sh: stage-log env line added
+stage-log patch in place, syntax ok
+serving at 21:33:55; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [285], G = 384, 23760 cold tensors in Grace (65.63 GiB, read 55.7 s, registered 0.29 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,063,261 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.97x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+stagelog-c1-r1-a: errors 0; decode tok/s 244.61 (20 timed); ms/step 12.619 tok/step 3.046 ms/token 4.143
+stagelog-c1-r1-b: errors 0; decode tok/s 241.27 (20 timed); ms/step 12.405 tok/step 2.954 ms/token 4.199
+stagelog-c1-r2-a: errors 0; decode tok/s 244.73 (20 timed); ms/step 12.612 tok/step 3.046 ms/token 4.141
+stagelog-c1-r2-b: errors 0; decode tok/s 240.34 (20 timed); ms/step 12.452 tok/step 2.954 ms/token 4.215
+stagelog-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 424.2 (407.0-441.9) | 137 (133-141) | 5.45 (5.38-5.65) | 77.4 (75.1-80.2) | 6 |
+stagelog-streams2-r1: | 8 | 858 | 107.3 | 3.064 | 60 |
+stagelog-streams2-r1: | 32 | 1,746 | 54.6 | 3.081 | 60 |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 46s -> /raid/work/ident/gtq6-stagelog-c1.json
+stagelog-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+DS41_FASTPATH gracetier: K4 stage log ON: /prof/gracetier-res/k4-stage.jsonl (40 layers, 3960 cold slots, per-expert picks on); instrumentation only, do not read throughput from this boot
+stage log: 22529 lines, 225M
+analyze rc=0 -> /raid/work/logs/gtq6-20261118T212757Z/k4-analysis.txt (113 lines)
+K4 stage log: 22485 steps analysed, 40 layers, H [285], residency True, picks True, segments in file 1 (last one used)
+  residency swaps during the log: 12268
+
+== all: 22485 steps ==
+1. census: 1.90 cold experts staged per layer-call (max 50, 34.2 % of layer-calls stage none); 76.0 per step; cold picks per staged expert 1.62
+   modeled serial staging: 3.94 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 29.9  W=2: 39.4  W=4: 50.1  W=8: 61.2  W=16: 71.7
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 32.4 [2.6]  K=8: 43.9 [5.3]  K=16: 57.7 [10.5]  K=32: 74.7 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 14.3  lanes=2: 24.8  lanes=4: 38.2  lanes=8: 55.0
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   29.9  waste   70.1  size   1.90
+   prev-2  steps      recall   39.4  waste   76.8  size   3.23
+   prev-4  steps      recall   50.1  waste   82.4  size   5.42
+   prev-8  steps      recall   61.2  waste   86.9  size   8.84
+   counter top-1      recall    7.5  waste   85.7  size   1.00
+   counter top-2      recall   13.2  waste   87.5  size   2.00
+   counter top-4      recall   21.9  waste   89.6  size   4.00
+   counter top-8      recall   35.0  waste   91.7  size   8.00
+   counter top-16     recall   52.7  waste   93.7  size  16.00
+   (counter = decayed pick count of staged experts, half-life 64.0 steps)
+
+== nreq=1: 18199 steps ==
+1. census: 1.28 cold experts staged per layer-call (max 41, 38.7 % of layer-calls stage none); 51.0 per step; cold picks per staged expert 1.59
+   modeled serial staging: 2.72 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 35.8  W=2: 43.6  W=4: 51.2  W=8: 58.9  W=16: 66.3
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 46.4 [2.6]  K=8: 58.7 [5.3]  K=16: 70.2 [10.5]  K=32: 81.2 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 23.6  lanes=2: 37.3  lanes=4: 51.3  lanes=8: 65.6
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   35.8  waste   63.6  size   1.25
+   prev-2  steps      recall   43.6  waste   73.0  size   2.06
+   prev-4  steps      recall   51.2  waste   80.9  size   3.42
+   prev-8  steps      recall   58.9  waste   86.8  size   5.71
+   counter top-1      recall   10.3  waste   86.9  size   1.00
+   counter top-2      recall   17.5  waste   88.8  size   2.00
+   counter top-4      recall   28.0  waste   91.1  size   4.00
+   counter top-8      recall   42.0  waste   93.3  size   8.00
+   counter top-16     recall   58.8  waste   95.3  size  16.00
+
+== nreq=17-32: 1399 steps ==
+1. census: 6.63 cold experts staged per layer-call (max 42, 2.4 % of layer-calls stage none); 265.2 per step; cold picks per staged expert 1.23
+   modeled serial staging: 13.15 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 20.3  W=2: 32.4  W=4: 48.3  W=8: 65.6  W=16: 80.8
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 10.8 [2.6]  K=8: 19.4 [5.3]  K=16: 34.2 [10.5]  K=32: 59.0 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 1.7  lanes=2: 7.1  lanes=4: 18.7  lanes=8: 37.9
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   20.3  waste   79.7  size   6.63
+   prev-2  steps      recall   32.4  waste   82.0  size  11.91
+   prev-4  steps      recall   48.3  waste   84.2  size  20.27
+   prev-8  steps      recall   65.6  waste   86.4  size  31.97
+   counter top-1      recall    3.6  waste   76.2  size   1.00
+   counter top-2      recall    6.8  waste   77.5  size   2.00
+   counter top-4      recall   12.7  waste   78.9  size   4.00
+   counter top-8      recall   23.3  waste   80.7  size   8.00
+   counter top-16     recall   40.9  waste   83.1  size  16.00
+
+== nreq=5-8: 2633 steps ==
+1. census: 3.87 cold experts staged per layer-call (max 50, 14.1 % of layer-calls stage none); 154.8 per step; cold picks per staged expert 1.56
+   modeled serial staging: 7.78 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 25.5  W=2: 36.3  W=4: 49.0  W=8: 62.6  W=16: 75.7
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+patching file tree/fastpath/fastpath_gracetier.py
+serve.sh: stage-log env line removed
+after: , restarts , telemetry: {"at_boot": false, "cold": 4853, "cold_share": 0.04493518518518518, "drains": 354, "event": "drain", "freeze": false, "host_steps": 22656, "hot_moved": 1694, "pending": 30, "queued": 30, "sel": 108000, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 123
+CELL_DONE stagelog 21:41:58
+== CELL h288  [c1 s:8,32x2 id]  21:41:58
+policy additions: DS41_UTIL=0.97 
+hot map: 40 layers x 288 -> /raid/work/run/cells/hot-288.json
+make_rowmap_allres: 40 layers, H=288 (per-layer [288]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-288.json, all entries >= 0, permutat
+serving at 21:48:15; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [288], G = 384, 23040 cold tensors in Grace (63.28 GiB, read 48.6 s, registered 0.18 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 1,257,624 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.20x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+h288-c1-r1-a: errors 0; decode tok/s 311.9 (20 timed); ms/step 9.896 tok/step 3.046 ms/token 3.249
+h288-c1-r1-b: errors 0; decode tok/s 307.27 (20 timed); ms/step 9.74 tok/step 2.954 ms/token 3.297
+h288-c1-r2-a: errors 0; decode tok/s 312.27 (20 timed); ms/step 9.885 tok/step 3.046 ms/token 3.245
+h288-c1-r2-b: errors 0; decode tok/s 306.35 (20 timed); ms/step 9.769 tok/step 2.954 ms/token 3.307
+h288-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 524.4 (498.8-539.3) | 128 (123-132) | 5.33 (5.26-5.40) | 100.5 (97.4-100.9) | 6 |
+h288-streams2-r1: | 8 | 1,043 | 130.4 | 3.023 | 60 |
+h288-streams2-r1: | 32 | 2,078 | 65.0 | 3.042 | 60 |
+h288-streams2-r2: | 8 | 1,125 | 140.6 | 2.997 | 60 |
+h288-streams2-r2: | 32 | 2,124 | 66.4 | 3.055 | 60 |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 37s -> /raid/work/ident/gtq6-h288-c1.json
+h288-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+after: ds41 Up 14 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 4577, "cold_share": 0.04219210914454277, "drains": 456, "event": "drain", "freeze": false, "host_steps": 29184, "hot_moved": 1703, "pending": 29, "queued": 29, "sel": 108480, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 125
+CELL_DONE h288 21:56:54
+== CELL h292u98  [c1 s:2,4,8,16,32x2 pf id]  21:56:54
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=524288 
+hot map: 40 layers x 292 -> /raid/work/run/cells/hot-292.json
+make_rowmap_allres: 40 layers, H=292 (per-layer [292]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-292.json, all entries >= 0, permutat
+serving at 22:02:36; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [292], G = 384, 22080 cold tensors in Grace (60.64 GiB, read 49.5 s, registered 0.23 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 2,400,125 tokens, Maximum concurrency for 524,288 tokens per request: 4.58x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+h292u98-c1-r1-a: errors 0; decode tok/s 317.71 (20 timed); ms/step 9.715 tok/step 3.046 ms/token 3.19
+h292u98-c1-r1-b: errors 0; decode tok/s 312.28 (20 timed); ms/step 9.584 tok/step 2.954 ms/token 3.244
+h292u98-c1-r2-a: errors 0; decode tok/s 316.92 (20 timed); ms/step 9.739 tok/step 3.046 ms/token 3.198
+h292u98-c1-r2-b: errors 0; decode tok/s 311.63 (20 timed); ms/step 9.604 tok/step 2.954 ms/token 3.251
+h292u98-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 554.5 (548.9-559.8) | 125 (122-132) | 5.42 (5.38-5.74) | 100.4 (96.6-103.2) | 6 |
+h292u98-streams2-r1: | 2 | 585 | 292.5 | 3.627 | 60 |
+h292u98-streams2-r1: | 4 | 842 | 210.4 | 3.721 | 60 |
+h292u98-streams2-r1: | 8 | 1,181 | 147.6 | 3.059 | 60 |
+h292u98-streams2-r1: | 16 | 1,649 | 103.1 | 3.068 | 60 |
+h292u98-streams2-r1: | 32 | 2,196 | 68.6 | 3.049 | 60 |
+h292u98-streams2-r2: | 2 | 613 | 306.7 | 3.659 | 60 |
+h292u98-streams2-r2: | 4 | 826 | 206.4 | 3.603 | 60 |
+h292u98-streams2-r2: | 8 | 1,178 | 147.3 | 3.071 | 60 |
+h292u98-streams2-r2: | 16 | 1,645 | 102.8 | 3.064 | 60 |
+h292u98-streams2-r2: | 32 | 2,191 | 68.5 | 3.059 | 60 |
+h292u98-prefill: | 14244 (14228-14266) | 276 (275-344) | 51459 (43033-51791) |
+h292u98-prefill: | 56812 (56797-56820) | 1091 (1076-1103) | 52068 (51504-52820) |
+h292u98-prefill: | 113795 (113778-113820) | 2192 (2184-2199) | 51905 (51746-52103) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 36s -> /raid/work/ident/gtq6-h292u98-c1.json
+h292u98-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+after: ds41 Up 22 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3725, "cold_share": 0.034800074738415544, "drains": 912, "event": "drain", "freeze": false, "host_steps": 58368, "hot_moved": 1697, "pending": 28, "queued": 28, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 16
+CELL_DONE h292u98 22:19:22
+== CELL ord3  [c1 s:8,32x1 id]  22:19:22
+CUT after h292u98 by queue 7 at 22:19:26 (ord3, k1f7h, k1f3h postponed)
+DONE

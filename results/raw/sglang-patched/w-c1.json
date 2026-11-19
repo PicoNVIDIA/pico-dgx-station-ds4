@@ -1,0 +1,57 @@
+{
+ "schema": "ds41-bench-full-v1",
+ "started": "2026-11-19T05:09:46+0000",
+ "environment": {},
+ "settings": {
+  "base_url": "http://127.0.0.1:30010",
+  "model": "dsv41-sglang",
+  "out": "/raid/work/logs/sgl4-20261119T050021Z/w-c1.json",
+  "env_file": null,
+  "skip": "fixed,coding,streams,prefill,capacity,quality",
+  "reps": 10,
+  "coding_reps": 5,
+  "prefill_reps": 3,
+  "window": 60,
+  "warmup": 20,
+  "conc": "4,8,16,32",
+  "capacity_n": 16,
+  "capacity_tokens": 110000,
+  "capacity_max_tokens": 2500,
+  "min_acc": 95.0
+ },
+ "gsm8k_c1": {
+  "conc": 1,
+  "greedy": false,
+  "window_s": 60.0,
+  "warmup_s": 20,
+  "aggregate_tok_s": 124.8,
+  "per_stream_tok_s": 124.8,
+  "server_counter_tok_s": 125.6,
+  "tokens_per_step": null,
+  "preemptions": 0.0,
+  "request_errors": 0,
+  "counted": "client"
+ },
+ "greedy_c1": {
+  "conc": 1,
+  "greedy": true,
+  "window_s": 60.0,
+  "warmup_s": 20,
+  "aggregate_tok_s": 127.3,
+  "per_stream_tok_s": 127.3,
+  "server_counter_tok_s": 128.6,
+  "tokens_per_step": null,
+  "preemptions": 0.0,
+  "request_errors": 0,
+  "counted": "client"
+ },
+ "gates": {
+  "tool_call": null,
+  "needles": null,
+  "gsm8k": null,
+  "capacity": null
+ },
+ "finished": "2026-11-19T05:12:26+0000",
+ "status": "PASS",
+ "failed_stages": []
+}

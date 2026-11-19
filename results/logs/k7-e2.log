@@ -1,0 +1,252 @@
+start 2026-11-19T07:09:35Z
+gpu before: NVIDIA GB300, 1 MiB, 256703 MiB
+sources: 4607da52992e  k7_e2_probe.py bce511bd87d8  k7_e2_kernel.cu 48f8d4cd077c  k7_e2_ptx.cuh 
+[E2] K7 E2: packed scale column -> TMA load -> shared memory -> tcgen05.cp -> tensor memory
+[E2] compiler: /usr/local/cuda/bin/nvcc (Cuda compilation tools, release 13.0, V13.0.88)
+[E2] cuda.h: /usr/local/cuda-13.0/include/cuda.h: 16U4_ALIGN8B at line 3624, 16U4_ALIGN16B at line 3625, 16U6_ALIGN16B at line 3626
+[E2] flags: nvcc -O3 -std=c++17 -shared -Xcompiler -fPIC -gencode=arch=compute_103a,code=sm_103a -DK7_CP_FORM=<n> (kernels/w8-persist/build.sh:10-12)
+[E2] form 0 compiled: tcgen05.cp.cta_group::1.32x128b.warpx4
+[E2] form 1 compiled: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b4x16_p64
+[E2] form 2 compiled: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b6x16_p32
+[E2] compiled [0, 1, 2] in 3 s; logs in /scratch/k7-e2-build-20261119-070935
+[E2] ==== controls: an 8-bit pattern through the same paths must come back unchanged
+[E2] ---- control A: stores > plain cp
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4; source: plain stores of the bytes
+[E2]      shared memory after the source step:
+[E2]        0000: 29 72 bb 04 4d 96 df 28 70 bb 02 4d 94 df 26 71
+[E2]        0010: bb 00 49 96 df 24 6d ba 02 49 90 df 26 6d b4 03
+[E2]        0020: 4d 96 df 20 69 b2 fb 4c 94 df 26 69 b0 fb 42 95
+[E2]        0030: df 24 6d b2 fb 40 89 de 26 6d b4 fb 42 89 d0 27
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 29 72 bb 04 4d 96 df 28 70 bb 02 4d 94 df 26 71
+[E2]        0010: bb 00 49 96 df 24 6d ba 02 49 90 df 26 6d b4 03
+[E2]        0020: 4d 96 df 20 69 b2 fb 4c 94 df 26 69 b0 fb 42 95
+[E2]        0030: df 24 6d b2 fb 40 89 de 26 6d b4 fb 42 89 d0 27
+[E2]      st/ld round trip ok; copy barrier completed; kernel reached its end
+[E2] VERDICT tmem [control A: stores > plain cp]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2]      device: NVIDIA GB300, compute capability 10.3, 249.8 GiB
+[E2] ---- control B: TMA u8 > plain cp
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_UINT8, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: 29 72 bb 04 4d 96 df 28 70 bb 02 4d 94 df 26 71
+[E2]        0010: bb 00 49 96 df 24 6d ba 02 49 90 df 26 6d b4 03
+[E2]        0020: 4d 96 df 20 69 b2 fb 4c 94 df 26 69 b0 fb 42 95
+[E2]        0030: df 24 6d b2 fb 40 89 de 26 6d b4 fb 42 89 d0 27
+[E2]      shared memory after the source step:
+[E2]        0000: 29 72 bb 04 4d 96 df 28 70 bb 02 4d 94 df 26 71
+[E2]        0010: bb 00 49 96 df 24 6d ba 02 49 90 df 26 6d b4 03
+[E2]        0020: 4d 96 df 20 69 b2 fb 4c 94 df 26 69 b0 fb 42 95
+[E2]        0030: df 24 6d b2 fb 40 89 de 26 6d b4 fb 42 89 d0 27
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 29 72 bb 04 4d 96 df 28 70 bb 02 4d 94 df 26 71
+[E2]        0010: bb 00 49 96 df 24 6d ba 02 49 90 df 26 6d b4 03
+[E2]        0020: 4d 96 df 20 69 b2 fb 4c 94 df 26 69 b0 fb 42 95
+[E2]        0030: df 24 6d b2 fb 40 89 de 26 6d b4 fb 42 89 d0 27
+[E2]      st/ld round trip ok; TMA barrier completed with 512 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [control B: TMA u8 > plain cp]: byte for byte the box in global memory; barrier counts 512 bytes
+[E2] VERDICT tmem [control B: TMA u8 > plain cp]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2] VERDICT controls: readback path (plain stores, plain copy, tcgen05.ld) PASS; TMA path (UINT8 load) PASS
+[E2] ==== stage 1: TMA load of a packed 4-bit column into shared memory
+[E2] ---- TMA 4-bit ALIGN16B > plain cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 fa 94 3e d8 72 1c b6 50
+[E2]        0010: 61 0b a5 4f e9 83 2d c7 d8 72 1c b6 50 fa 94 3e
+[E2]        0020: 4f e9 83 2d c7 61 0b a5 b6 50 fa 94 3e d8 72 1c
+[E2]        0030: 2d c7 61 0b a5 4f e9 83 94 3e d8 72 1c b6 50 fa
+[E2]      shared memory after the source step:
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 ee ee ee ee ee ee ee ee
+[E2]        0010: fa 94 3e d8 72 1c b6 50 ee ee ee ee ee ee ee ee
+[E2]        0020: 61 0b a5 4f e9 83 2d c7 ee ee ee ee ee ee ee ee
+[E2]        0030: d8 72 1c b6 50 fa 94 3e ee ee ee ee ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 ee ee ee ee ee ee ee ee
+[E2]        0010: fa 94 3e d8 72 1c b6 50 ee ee ee ee ee ee ee ee
+[E2]        0020: 61 0b a5 4f e9 83 2d c7 ee ee ee ee ee ee ee ee
+[E2]        0030: d8 72 1c b6 50 fa 94 3e ee ee ee ee ee ee ee ee
+[E2]      st/ld round trip ok; TMA barrier completed with 256 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 4-bit ALIGN16B > plain cp, all values]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2] VERDICT tmem [TMA 4-bit ALIGN16B > plain cp, all values]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2] ---- TMA 4-bit ALIGN16B > plain cp, nibbles 5..15
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: fe c7 a9 8b 6a bd da ba 8b f7 fb ab 8f a5 e5 da
+[E2]        0010: da 9a 99 df 6c bb a5 d8 97 c8 ba 7a 9c aa 8b 57
+[E2]        0020: 9c a8 be 95 bd d9 d9 5b cd fd 68 ba 9b bb dd a9
+[E2]        0030: d5 a9 ec 75 bb aa 9a e6 db dc f9 af 9b c8 c7 7c
+[E2]      shared memory after the source step:
+[E2]        0000: fe c7 a9 8b 6a bd da ba ee ee ee ee ee ee ee ee
+[E2]        0010: 8b f7 fb ab 8f a5 e5 da ee ee ee ee ee ee ee ee
+[E2]        0020: da 9a 99 df 6c bb a5 d8 ee ee ee ee ee ee ee ee
+[E2]        0030: 97 c8 ba 7a 9c aa 8b 57 ee ee ee ee ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: fe c7 a9 8b 6a bd da ba ee ee ee ee ee ee ee ee
+[E2]        0010: 8b f7 fb ab 8f a5 e5 da ee ee ee ee ee ee ee ee
+[E2]        0020: da 9a 99 df 6c bb a5 d8 ee ee ee ee ee ee ee ee
+[E2]        0030: 97 c8 ba 7a 9c aa 8b 57 ee ee ee ee ee ee ee ee
+[E2]      st/ld round trip ok; TMA barrier completed with 256 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 4-bit ALIGN16B > plain cp, nibbles 5..15]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2] ---- TMA 4-bit ALIGN8B > plain cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN8B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 fa 94 3e d8 72 1c b6 50
+[E2]        0010: 61 0b a5 4f e9 83 2d c7 d8 72 1c b6 50 fa 94 3e
+[E2]        0020: 4f e9 83 2d c7 61 0b a5 b6 50 fa 94 3e d8 72 1c
+[E2]        0030: 2d c7 61 0b a5 4f e9 83 94 3e d8 72 1c b6 50 fa
+[E2]      shared memory after the source step:
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 fa 94 3e d8 72 1c b6 50
+[E2]        0010: 61 0b a5 4f e9 83 2d c7 d8 72 1c b6 50 fa 94 3e
+[E2]        0020: 4f e9 83 2d c7 61 0b a5 b6 50 fa 94 3e d8 72 1c
+[E2]        0030: 2d c7 61 0b a5 4f e9 83 94 3e d8 72 1c b6 50 fa
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 fa 94 3e d8 72 1c b6 50
+[E2]        0010: 61 0b a5 4f e9 83 2d c7 d8 72 1c b6 50 fa 94 3e
+[E2]        0020: 4f e9 83 2d c7 61 0b a5 b6 50 fa 94 3e d8 72 1c
+[E2]        0030: 2d c7 61 0b a5 4f e9 83 94 3e d8 72 1c b6 50 fa
+[E2]      st/ld round trip ok; TMA barrier completed with 256 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 4-bit ALIGN8B > plain cp, all values]: STILL PACKED, no gaps (256 bytes, low element first); the rest untouched; barrier counts 256 bytes
+[E2] ==== stage 2: tcgen05.cp with the 4-bit to 8-bit decompress qualifier
+[E2] ---- padded rows > 4-bit cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b4x16_p64; source: plain stores of hand-built padded rows (8 packed + 8 pad)
+[E2]      shared memory after the source step:
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 5a 5a 5a 5a 5a 5a 5a 5a
+[E2]        0010: fa 94 3e d8 72 1c b6 50 5a 5a 5a 5a 5a 5a 5a 5a
+[E2]        0020: 61 0b a5 4f e9 83 2d c7 5a 5a 5a 5a 5a 5a 5a 5a
+[E2]        0030: d8 72 1c b6 50 fa 94 3e 5a 5a 5a 5a 5a 5a 5a 5a
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 0c 20 34 08 1c 30 04 18 2c 00 14 28 3c 10 24 38
+[E2]        0010: 28 3c 10 24 38 0c 20 34 08 1c 30 04 18 2c 00 14
+[E2]        0020: 04 18 2c 00 14 28 3c 10 24 38 0c 20 34 08 1c 30
+[E2]        0030: 20 34 08 1c 30 04 18 2c 00 14 28 3c 10 24 38 0c
+[E2]      st/ld round trip ok; copy barrier completed; kernel reached its end
+[E2] VERDICT tmem [padded rows > 4-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2] ---- TMA 4-bit ALIGN16B > 4-bit cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b4x16_p64; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 fa 94 3e d8 72 1c b6 50
+[E2]        0010: 61 0b a5 4f e9 83 2d c7 d8 72 1c b6 50 fa 94 3e
+[E2]        0020: 4f e9 83 2d c7 61 0b a5 b6 50 fa 94 3e d8 72 1c
+[E2]        0030: 2d c7 61 0b a5 4f e9 83 94 3e d8 72 1c b6 50 fa
+[E2]      shared memory after the source step:
+[E2]        0000: 83 2d c7 61 0b a5 4f e9 ee ee ee ee ee ee ee ee
+[E2]        0010: fa 94 3e d8 72 1c b6 50 ee ee ee ee ee ee ee ee
+[E2]        0020: 61 0b a5 4f e9 83 2d c7 ee ee ee ee ee ee ee ee
+[E2]        0030: d8 72 1c b6 50 fa 94 3e ee ee ee ee ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 0c 20 34 08 1c 30 04 18 2c 00 14 28 3c 10 24 38
+[E2]        0010: 28 3c 10 24 38 0c 20 34 08 1c 30 04 18 2c 00 14
+[E2]        0020: 04 18 2c 00 14 28 3c 10 24 38 0c 20 34 08 1c 30
+[E2]        0030: 20 34 08 1c 30 04 18 2c 00 14 28 3c 10 24 38 0c
+[E2]      st/ld round trip ok; TMA barrier completed with 256 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 4-bit ALIGN16B > 4-bit cp, all values]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2] VERDICT tmem [TMA 4-bit ALIGN16B > 4-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2] ---- TMA 4-bit ALIGN16B > 4-bit cp, nibbles 5..15
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b4x16_p64; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: fe c7 a9 8b 6a bd da ba 8b f7 fb ab 8f a5 e5 da
+[E2]        0010: da 9a 99 df 6c bb a5 d8 97 c8 ba 7a 9c aa 8b 57
+[E2]        0020: 9c a8 be 95 bd d9 d9 5b cd fd 68 ba 9b bb dd a9
+[E2]        0030: d5 a9 ec 75 bb aa 9a e6 db dc f9 af 9b c8 c7 7c
+[E2]      shared memory after the source step:
+[E2]        0000: fe c7 a9 8b 6a bd da ba ee ee ee ee ee ee ee ee
+[E2]        0010: 8b f7 fb ab 8f a5 e5 da ee ee ee ee ee ee ee ee
+[E2]        0020: da 9a 99 df 6c bb a5 d8 ee ee ee ee ee ee ee ee
+[E2]        0030: 97 c8 ba 7a 9c aa 8b 57 ee ee ee ee ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 38 3c 1c 30 24 28 2c 20 28 18 34 2c 28 34 28 2c
+[E2]        0010: 2c 20 1c 3c 2c 3c 2c 28 3c 20 14 28 14 38 28 34
+[E2]        0020: 28 34 28 24 24 24 3c 34 30 18 2c 2c 14 28 20 34
+[E2]        0030: 1c 24 20 30 28 2c 28 1c 30 24 28 28 2c 20 1c 14
+[E2]      st/ld round trip ok; TMA barrier completed with 256 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 4-bit ALIGN16B > 4-bit cp, nibbles 5..15]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2] VERDICT tmem [TMA 4-bit ALIGN16B > 4-bit cp, nibbles 5..15]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2] ==== stage 2b: the same with 6-bit codes (the fallback if 4 bits cannot be used)
+[E2] ---- padded rows > 6-bit cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b6x16_p32; source: plain stores of hand-built padded rows (12 packed + 4 pad)
+[E2]      shared memory after the source step:
+[E2]        0000: 0b 5c e9 1f 91 3a 33 d6 8b 07 1b d9 5a 5a 5a 5a
+[E2]        0010: 1b 50 2a 2f 95 7b 03 da c8 17 1f 1a 5a 5a 5a 5a
+[E2]        0020: 2b 54 6b 3f 99 b8 13 de 09 27 13 5b 5a 5a 5a 5a
+[E2]        0030: 3b 58 a8 0f 9d f9 23 d2 4a 37 17 98 5a 5a 5a 5a
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 0b 30 15 3a 1f 04 29 0e 33 18 3d 22 07 2c 11 36
+[E2]        0010: 1b 00 25 0a 2f 14 39 1e 03 28 0d 32 17 3c 21 06
+[E2]        0020: 2b 10 35 1a 3f 24 09 2e 13 38 1d 02 27 0c 31 16
+[E2]        0030: 3b 20 05 2a 0f 34 19 3e 23 08 2d 12 37 1c 01 26
+[E2]      st/ld round trip ok; copy barrier completed; kernel reached its end
+[E2] VERDICT tmem [padded rows > 6-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2] ---- TMA 6-bit ALIGN16B > 6-bit cp, all values
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b6x16_p32; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U6_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: 0b 5c e9 1f 91 3a 33 d6 8b 07 1b d9 1b 50 2a 2f
+[E2]        0010: 95 7b 03 da c8 17 1f 1a 2b 54 6b 3f 99 b8 13 de
+[E2]        0020: 09 27 13 5b 3b 58 a8 0f 9d f9 23 d2 4a 37 17 98
+[E2]        0030: 0b 5c e9 1f 91 3a 33 d6 8b 07 1b d9 1b 50 2a 2f
+[E2]      shared memory after the source step:
+[E2]        0000: 0b 5c e9 1f 91 3a 33 d6 8b 07 1b d9 ee ee ee ee
+[E2]        0010: 1b 50 2a 2f 95 7b 03 da c8 17 1f 1a ee ee ee ee
+[E2]        0020: 2b 54 6b 3f 99 b8 13 de 09 27 13 5b ee ee ee ee
+[E2]        0030: 3b 58 a8 0f 9d f9 23 d2 4a 37 17 98 ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 0b 30 15 3a 1f 04 29 0e 33 18 3d 22 07 2c 11 36
+[E2]        0010: 1b 00 25 0a 2f 14 39 1e 03 28 0d 32 17 3c 21 06
+[E2]        0020: 2b 10 35 1a 3f 24 09 2e 13 38 1d 02 27 0c 31 16
+[E2]        0030: 3b 20 05 2a 0f 34 19 3e 23 08 2d 12 37 1c 01 26
+[E2]      st/ld round trip ok; TMA barrier completed with 384 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 6-bit ALIGN16B > 6-bit cp, all values]: STILL PACKED, 12 data + 4 pad bytes per 16 elements, low element first; pad untouched; barrier counts 384 bytes
+[E2] VERDICT tmem [TMA 6-bit ALIGN16B > 6-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2] ---- TMA 6-bit ALIGN16B > 6-bit cp, codes-64
+[E2]      copy: tcgen05.cp.cta_group::1.32x128b.warpx4.b8x16.b6x16_p32; source: TMA load, CU_TENSOR_MAP_DATA_TYPE_16U6_ALIGN16B, box 128 elements x 4 rows
+[E2]      global (the box, packed):
+[E2]        0000: fe 7f f3 b9 be e3 ba dd ef 7a af ef 3b 7e ff fb
+[E2]        0010: bf eb 3f 5e eb b5 af f7 7a af e7 79 fe f7 bc bd
+[E2]        0020: ef b5 8e f7 77 8e f3 fa ae df 7c ae eb 3b 7e d7
+[E2]        0030: 7c 8e eb fe 5e e7 fd 9e f7 79 bf d7 3d df ff b8
+[E2]      shared memory after the source step:
+[E2]        0000: fe 7f f3 b9 be e3 ba dd ef 7a af ef ee ee ee ee
+[E2]        0010: 3b 7e ff fb bf eb 3f 5e eb b5 af f7 ee ee ee ee
+[E2]        0020: 7a af e7 79 fe f7 bc bd ef b5 8e f7 ee ee ee ee
+[E2]        0030: 77 8e f3 fa ae df 7c ae eb 3b 7e d7 ee ee ee ee
+[E2]      tensor memory after the copy (lanes 0..3, columns 0..3):
+[E2]        0000: 3e 3f 37 3c 39 3a 3b 38 3a 36 3d 3b 3a 3d 3a 3b
+[E2]        0010: 3b 38 37 3f 3b 3f 3b 3a 3f 38 35 3a 35 3e 3a 3d
+[E2]        0020: 3a 3d 3a 39 39 39 3f 3d 3c 36 3b 3b 35 3a 38 3d
+[E2]        0030: 37 39 38 3c 3a 3b 3a 37 3c 39 3a 3a 3b 38 37 35
+[E2]      st/ld round trip ok; TMA barrier completed with 384 bytes expected; copy barrier completed; kernel reached its end
+[E2] VERDICT smem [TMA 6-bit ALIGN16B > 6-bit cp, codes-64]: STILL PACKED, 12 data + 4 pad bytes per 16 elements, low element first; pad untouched; barrier counts 384 bytes
+[E2] VERDICT tmem [TMA 6-bit ALIGN16B > 6-bit cp, codes-64]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2] ==== stage 3: one block-scaled multiply, weight scales from the packed column
+[E2] VERDICT multiply harness: PASS: unit scales give 128.0 yes, dense scales give the exact value yes, a changed scale changes the result yes, non-zero words 1.00
+[E2] VERDICT multiply [4-bit decompress, act +112, via TMA]: all-ones exact NO, random data vs dense 8-bit scales DIFFERENT (2048 of 2048 words; first all-ones word wanted 0000e83d got 00108c4e)
+[E2] VERDICT multiply [6-bit decompress, act +64, via TMA]: all-ones exact yes, random data vs dense 8-bit scales IDENTICAL
+[E2] ==== summary
+[E2]   tmem [control A: stores > plain cp]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2]   smem [control B: TMA u8 > plain cp]: byte for byte the box in global memory; barrier counts 512 bytes
+[E2]   tmem [control B: TMA u8 > plain cp]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2]   controls: readback path (plain stores, plain copy, tcgen05.ld) PASS; TMA path (UINT8 load) PASS
+[E2]   smem [TMA 4-bit ALIGN16B > plain cp, all values]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2]   tmem [TMA 4-bit ALIGN16B > plain cp, all values]: RAW COPY of shared memory (16 bytes per lane, nothing converted)
+[E2]   smem [TMA 4-bit ALIGN16B > plain cp, nibbles 5..15]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2]   smem [TMA 4-bit ALIGN8B > plain cp, all values]: STILL PACKED, no gaps (256 bytes, low element first); the rest untouched; barrier counts 256 bytes
+[E2]   tmem [padded rows > 4-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2]   smem [TMA 4-bit ALIGN16B > 4-bit cp, all values]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2]   tmem [TMA 4-bit ALIGN16B > 4-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2]   smem [TMA 4-bit ALIGN16B > 4-bit cp, nibbles 5..15]: STILL PACKED, 8 data + 8 pad bytes per 16 elements, low element first; pad untouched; barrier counts 256 bytes
+[E2]   tmem [TMA 4-bit ALIGN16B > 4-bit cp, nibbles 5..15]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4)
+[E2]   tmem [padded rows > 6-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2]   smem [TMA 6-bit ALIGN16B > 6-bit cp, all values]: STILL PACKED, 12 data + 4 pad bytes per 16 elements, low element first; pad untouched; barrier counts 384 bytes
+[E2]   tmem [TMA 6-bit ALIGN16B > 6-bit cp, all values]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2]   smem [TMA 6-bit ALIGN16B > 6-bit cp, codes-64]: STILL PACKED, 12 data + 4 pad bytes per 16 elements, low element first; pad untouched; barrier counts 384 bytes
+[E2]   tmem [TMA 6-bit ALIGN16B > 6-bit cp, codes-64]: ONE BYTE PER ELEMENT, in order (low nibble first), byte = value
+[E2]   multiply harness: PASS: unit scales give 128.0 yes, dense scales give the exact value yes, a changed scale changes the result yes, non-zero words 1.00
+[E2]   multiply [4-bit decompress, act +112, via TMA]: all-ones exact NO, random data vs dense 8-bit scales DIFFERENT (2048 of 2048 words; first all-ones word wanted 0000e83d got 00108c4e)
+[E2]   multiply [6-bit decompress, act +64, via TMA]: all-ones exact yes, random data vs dense 8-bit scales IDENTICAL
+[E2]   note: 4 bits: tensor memory holds ONE BYTE PER ELEMENT, in order (low nibble first), byte = value << 2 (value * 4); that is not the code plus a constant, so the multiply cannot use it
+[E2]   note: the multiply confirms it: bit-identical to dense 8-bit scales
+[E2] DECISION: 4-BIT A2 IS DEAD; A2 WITH 6-BIT CODES IS ALIVE (frees 3.95 GiB, not 7.91); a1 or a0 for the rest
+[E2] wrote /scratch/k7-e2.json
+E2 rc=0 (0 = ran and classified, 2 = could not compile or run, 3 = ran but a control failed, 124 = time cap of 600 s)
+raw results: /raid/work/k7/scratch/k7-e2.json   build logs: /raid/work/k7/scratch/k7-e2-build-20261119-070935
+gpu after: 1 MiB
+end 2026-11-19T07:09:47Z
+DONE

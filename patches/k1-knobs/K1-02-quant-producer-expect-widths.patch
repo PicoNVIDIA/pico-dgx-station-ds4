@@ -1,0 +1,47 @@
+--- a/fastpath/fastpath_quant_producer.py	2026-11-18 12:50:50
++++ b/fastpath/fastpath_quant_producer.py	2026-11-18 12:54:57
+@@ -20,6 +20,7 @@
+ import functools
+ import inspect
+ import json
++import os
+ import sys
+ import threading
+ 
+@@ -43,6 +44,21 @@
+     sys.stderr.flush()
+ 
+ 
++def expect_widths():
++    """K1: the one-request fused widths this boot must capture. Unset = all of FUSED_WIDTHS (the shipped recipe).
++    DS41_QP_EXPECT_WIDTHS = "6,8" / "8" / "6" / "none" states another expectation. It can only name widths the CS16
++    seam library accepts (T 6 or 8: seam_quant_cs16.cu), and the capture must still match it exactly."""
++    raw = os.environ.get('DS41_QP_EXPECT_WIDTHS', '').strip()
++    if not raw:
++        return list(FUSED_WIDTHS)
++    if raw == 'none':
++        return []
++    want = sorted({int(x) for x in raw.split(',')})
++    if not set(want) <= set(FUSED_WIDTHS):
++        raise RuntimeError(f'quant_producer: DS41_QP_EXPECT_WIDTHS={raw} names a width outside {FUSED_WIDTHS}')
++    return want
++
++
+ def invalidate(where, error):
+     """Binding callbacks latch the first failure; the capture wrapper raises it before the server is ready."""
+     global INVALID_REASON, FUSE_FORWARD
+@@ -183,9 +199,11 @@
+             log('CAPTURE ' + json.dumps(row, sort_keys=True))
+             if isinstance(self, module.ModelCudaGraphManager):
+                 widths = sorted({d.num_tokens for d in fused})
+-                if widths != list(FUSED_WIDTHS):
+-                    raise RuntimeError(f'quant_producer fused widths {widths}; the recipe captures {FUSED_WIDTHS} '
+-                                       'for one request (check the speculative schedule and capture sizes)')
++                want = expect_widths()
++                if widths != want:
++                    raise RuntimeError(f'quant_producer fused widths {widths}; this boot expects {want} (of '
++                                       f'{FUSED_WIDTHS}) for one request (check the speculative schedule, capture '
++                                       'sizes and DS41_QP_EXPECT_WIDTHS)')
+                 activate('quant_producer')
+             return result
+ 

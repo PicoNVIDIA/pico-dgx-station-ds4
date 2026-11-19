@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "model": "deepseek-ai/DeepSeek-V4.1-Flash-1017 (stock weights, rev 08c8657f)",
+    "machine": "DGX Station, one GB300 (256,703 MiB), DGX OS 7.6.0, driver 610.43.02, CUDA 13.3",
+    "measured": "2026-11-18 and 2026-11-19 (UTC), one machine, most cells once",
+    "benchmark": "Garner McCloud's bench_full.py: fixed code prompt (2.6K in, 2,048 out, greedy, one warm-up then 5 runs), GSM8K windows of 60 s (T=1.0, thinking on), prefill on uncached prompts, GSM8K-200, needles, tool call. Mixed prompts: James Meadlock's two sets of 20 prompts (greedy, thinking off).",
+    "unit": "output tokens per second unless stated",
+    "notes": [
+      "A two-value entry is the lowest and highest value across boots (or passes) of the same config.",
+      "code_1user is the median of 5 timed runs in a session; a range is two or three session medians.",
+      "Stream rows for this recipe are one 60 s window in a full-scoreboard session; for the public recipe they are the mean of two warmed passes; for SGLang the mean of two passes counted at the client.",
+      "Stock vLLM stream rows were run once, with no warm-up rounds first, and read 14 percent under the numbers published for that config (326 and 584). Stock runs at most 24 requests at once, so at 32 users 8 wait.",
+      "The engine adapts its resident experts to the traffic. All numbers are settled speeds on prompts that were also used to warm up, except the held_out_1m block."
+    ]
+  },
+  "systems": [
+    {"id": "stock_vllm", "label": "Stock vLLM", "detail": "vLLM v0.32.0, its own Station config: UVA offload with a 60 GB budget, GPU memory fraction 0.97, 3 draft tokens, 24 requests at once", "context": "1M", "raw": "results/raw/stock-vllm/"},
+    {"id": "sglang_patched", "label": "SGLang (one line patched)", "detail": "nightly 6b374a55, expert-tier SM gate removed, 255 resident experts per layer, memory fraction 0.90, no draft model. Stock SGLang does not load this model on one GB300", "context": "262K", "raw": "results/raw/sglang-patched/"},
+    {"id": "public_recipe", "label": "Public one-GPU recipe", "detail": "Garner McCloud's engine + James Meadlock's gracetier, 275 experts per layer at 95 percent GPU memory, re-run on our box", "context": "1M", "raw": "results/raw/public-recipe-275/"},
+    {"id": "ours_1m", "label": "This recipe, 1M context", "detail": "291 experts per layer, 98 percent GPU memory, stage skip on (default profile)", "context": "1M", "raw": "results/raw/this-recipe-1m/"},
+    {"id": "ours_524k", "label": "This recipe, 524K context", "detail": "298 experts per layer, 98 percent GPU memory, stage skip on", "context": "524K", "raw": "results/raw/this-recipe-524k/"},
+    {"id": "ours_262k", "label": "This recipe, 262K context", "detail": "302 experts per layer, 98 percent GPU memory, stage skip on (speed profile)", "context": "262K", "raw": "results/raw/this-recipe-262k/"}
+  ],
+  "cells": {
+    "code_1user":    {"title": "One user, code prompt", "stock_vllm": 177.8, "sglang_patched": 135.6, "public_recipe": [477.3, 511.5], "ours_1m": [539.5, 564.7], "ours_524k": [545.2, 566.8], "ours_262k": [545.6, 580.9]},
+    "mixed_1user":   {"title": "One user, 40 mixed prompts", "stock_vllm": [136.1, 138.3], "sglang_patched": null, "public_recipe": [289.0, 293.1], "ours_1m": [309.7, 329.5], "ours_524k": [331.7, 338.9], "ours_262k": [336.2, 343.8]},
+    "coding_1user":  {"title": "One user, coding task", "stock_vllm": null, "sglang_patched": 135.7, "public_recipe": 568.1, "ours_1m": 605.3, "ours_524k": 610.0, "ours_262k": 629.7},
+    "sampled_1user": {"title": "One user, reasoning (GSM8K, sampled)", "stock_vllm": 134.5, "sglang_patched": 124.8, "public_recipe": 396.1, "ours_1m": 400.6, "ours_524k": 417.9, "ours_262k": 423.3},
+    "greedy_1user":  {"title": "One user, GSM8K greedy", "stock_vllm": null, "sglang_patched": 127.3, "public_recipe": 486.9, "ours_1m": 501.3, "ours_524k": 510.8, "ours_262k": 518.2},
+    "users_2":  {"title": "2 users",  "stock_vllm": null, "sglang_patched": 208, "public_recipe": 562,  "ours_1m": 591,  "ours_524k": 626,  "ours_262k": 602},
+    "users_4":  {"title": "4 users",  "stock_vllm": null, "sglang_patched": 297, "public_recipe": 790,  "ours_1m": 849,  "ours_524k": 860,  "ours_262k": 876},
+    "users_8":  {"title": "8 users",  "stock_vllm": 281,  "sglang_patched": 378, "public_recipe": 1100, "ours_1m": 1178, "ours_524k": 1204, "ours_262k": 1234},
+    "users_16": {"title": "16 users", "stock_vllm": null, "sglang_patched": 471, "public_recipe": 1482, "ours_1m": 1638, "ours_524k": 1682, "ours_262k": 1740},
+    "users_32": {"title": "32 users", "stock_vllm": 501,  "sglang_patched": 552, "public_recipe": 1946, "ours_1m": 2148, "ours_524k": 2237, "ours_262k": 2299},
+    "prefill_114k": {"title": "Prefill, 114K-token prompt", "stock_vllm": null, "sglang_patched": 14352, "public_recipe": 49477, "ours_1m": 51686, "ours_524k": 52894, "ours_262k": 53136},
+    "ttft_ms": {"title": "Time to first token, code prompt (ms)", "stock_vllm": 234, "sglang_patched": [440, 538], "public_recipe": 142, "ours_1m": 126, "ours_524k": 122, "ours_262k": 119},
+    "gsm8k_200": {"title": "GSM8K-200 correct", "stock_vllm": null, "sglang_patched": 195, "public_recipe": 195, "ours_1m": 196, "ours_524k": 196, "ours_262k": 195},
+    "kv_tokens": {"title": "Context cache (tokens)", "stock_vllm": 3100000, "sglang_patched": null, "public_recipe": 2713967, "ours_1m": 1488297, "ours_524k": 934717, "ours_262k": 521158}
+  },
+  "code_prompt_steps": {
+    "note": "Fixed code prompt, one full-scoreboard session each: tokens per second = tokens per step x steps per second. Source: the fixed-prompt row of each raw scoreboard; the fixed-3 row is cell k1f3f in results/logs/gtq13-run.log.",
+    "stock_vllm":     {"tok_s": 177.8, "tokens_per_step": 3.60, "steps_per_s": 49.5, "timed_runs": [174.1, 179.2, 178.0, 177.8, 169.0]},
+    "public_recipe":  {"tok_s": 510.5, "tokens_per_step": 5.42, "steps_per_s": 95.0, "timed_runs": [447.9, 495.4, 515.9, 530.2, 510.5]},
+    "ours_1m":        {"tok_s": 564.7, "tokens_per_step": 5.57, "steps_per_s": 101.1, "timed_runs": [488.8, 564.7, 522.4, 565.4, 611.4]},
+    "ours_524k":      {"tok_s": 566.8, "tokens_per_step": 5.57, "steps_per_s": 102.2, "timed_runs": [501.2, 545.6, 566.8, 591.8, 596.5]},
+    "ours_262k":      {"tok_s": 545.6, "tokens_per_step": 5.39, "steps_per_s": 103.2, "timed_runs": [521.2, 545.6, 588.7, 535.3, 616.9]},
+    "ours_262k_fixed_3_drafts": {"tok_s": 445.3, "tokens_per_step": 3.55, "steps_per_s": 125.8},
+    "sglang_patched": {"tok_s": 135.6, "tokens_per_step": 1.0, "steps_per_s": 135.6, "timed_runs": [135.6, 135.6, 135.9]}
+  },
+  "short_request_burst_262k": {
+    "note": "James Meadlock's A5 cells on the 262K profile, three passes: 40 short requests 8 at a time, and 64 short requests 32 at a time. Source: results/logs/gtq12-run.log, cell a5f262.",
+    "users_8": [675.3, 777.1, 774.3],
+    "users_32": [1103.4, 1050.2, 1135.3]
+  },
+  "held_out_1m": {
+    "note": "Default profile, a boot with no warm-up rounds (cell ho1m in results/logs/gtq22-run.log). Prompt set A was run three times, then set B, which the server had not seen. One user, tok/s, with the share of expert picks that were cold.",
+    "set_a_first_contact_fresh_boot": {"tok_s": 283.9, "cold_share_pct": 12.84},
+    "set_a_settled": {"tok_s": [334.0, 339.7], "cold_share_pct": 2.24},
+    "set_b_first_contact_held_out": {"tok_s": 317.0, "cold_share_pct": 4.04},
+    "set_b_settled": {"tok_s": [333.3, 334.8], "cold_share_pct": 2.15},
+    "set_a_again": {"tok_s": 323.0, "cold_share_pct": 3.54},
+    "code_prompt_timed_runs": [515.5, 529.4, 561.3, 553.4, 559.5]
+  },
+  "stage_skip_pair_1m": {
+    "note": "Default profile with the stage skip patch in the tree, switched off (cell sk0_1m) and on (sk1_1m), same measurements in the same order. Source: results/logs/gtq22-run.log. Both gave 40 of 40 identical outputs.",
+    "off": {"set_a": [314.3, 314.7], "set_b": [305.4, 308.7], "code_1user": 517.5, "users_2": [594, 606], "users_8": [1153, 1158], "users_32": [2137, 2145]},
+    "on":  {"set_a": [328.3, 329.5], "set_b": [323.8, 323.2], "code_1user": 539.5, "users_2": [599, 574], "users_8": [1171, 1161], "users_32": [2149, 2154]}
+  },
+  "soak_1m": {
+    "note": "Default profile, four rounds of about 53 minutes (cell soak1m in results/logs/gtq21-run.log): 10-minute windows at 2, 4, 8, 16 and 32 users with long uncached prompts arriving throughout, 1 skip in 200 compared byte for byte. tok/s per round.",
+    "hours": 3.5, "server_error_lines": 0, "restarts": 0, "long_prompt_rounds": 361, "skips_compared": 14526, "skips_differing": 0,
+    "users_8": [1056, 1059, 1061, 1056], "users_16": [1472, 1475, 1479, 1469], "users_32": [1936, 1959, 1948, 1958],
+    "afterwards": {"gsm8k_200": 195, "needles": "3 of 3", "tool_call": "pass", "identity": "40 of 40"}
+  },
+  "two_gpu_reference": {
+    "label": "Station with an RTX PRO 6000 added (Garner McCloud, published, not measured by us)",
+    "code_1user": 733.6, "coding_1user": 795.5, "sampled_1user": 500.5, "greedy_1user": 588.6,
+    "users_4": 983, "users_8": 1373, "users_16": 1936, "users_32": 2524, "prefill_114k": 38324, "ttft_ms": 138, "kv_tokens": 11372409
+  },
+  "capacity_variants": {
+    "note": "Packed 6-bit scale banks (experimental patch, off by default): 2 to 5 percent slower at 2 to 32 users in one session each, and a larger context cache.",
+    "capacity_1m":   {"experts": 291, "context": "1M",   "kv_tokens": 2784547, "code_1user": 507.0, "users_8": 1143, "users_32": 2084, "gsm8k_200": 197},
+    "capacity_524k": {"experts": 298, "context": "524K", "kv_tokens": 2060127, "code_1user": 541.4, "users_8": 1174, "users_32": 2153, "gsm8k_200": 195}
+  }
+}

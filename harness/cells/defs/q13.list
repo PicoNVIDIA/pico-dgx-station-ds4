@@ -1,0 +1,4 @@
+# One-request draft count fixed at 7 and at 3, then 16K prefill chunks, all on the 262K final.
+k1f7f|c1 id
+k1f3f|c1 id
+pf16kf|c1 s:8,32x2 pf id

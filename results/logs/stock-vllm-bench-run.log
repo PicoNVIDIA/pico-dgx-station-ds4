@@ -1,0 +1,38 @@
+start 2026-11-18T17:35:54Z
+[bench] fixed ...
+[bench] fixed done in 77 s
+[bench] gsm8k_c1 ...
+[bench] gsm8k_c1 done in 80 s
+[bench] streams ...
+[bench] streams done in 164 s
+# ds41 bench --full
+
+Image `?`, driver ?, GPUs ?, util ?, rowmap `?`, recipe commit `?`, GPU KV cache ? tokens. One server session; started 2026-11-18T17:35:54+0000. Medians with the interquartile range in brackets.
+
+## Single stream
+
+| shape | output tok/s | TTFT ms | accepted tokens/step | steps/s | runs |
+|---|---|---|---|---|---|
+| fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 177.8 (174.1-178.0) | 234 (234-239) | 3.60 (3.52-3.60) | 49.5 (49.4-49.5) | 5 |
+| GSM8K decode, T=1.0, thinking on (60 s window) | 134.5 | — | 2.789 | — | window |
+
+## Many streams (GSM8K, T=1.0, thinking on)
+
+| streams | aggregate tok/s | per stream tok/s | tokens/step | window s |
+|---|---|---|---|---|
+| 8 | 281 | 35.2 | 2.833 | 60 |
+| 32 | 501 | 15.7 | 2.805 | 60 |
+
+[bench] PASS: /raid/work/logs/stock-bench-20261118T173554Z/bench-dsv41-gb300-alone.json (+ .md)
+bench_full rc=0
+2026-11-18 17:41:50 UTC [a5 stock] warm-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 136.07 (20 timed); ms/step 19.464 tok/step 2.618 ms/token 7.434; per-prompt ms/step min 18.618 max 23.383
+2026-11-18 17:42:25 UTC [a5 stock] warm-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 138.29 (20 timed); ms/step 19.44 tok/step 2.657 ms/token 7.316; per-prompt ms/step min 18.485 max 22.478
+2026-11-18 17:43:01 UTC [a5 stock] c1-a rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 136.07 (20 timed); ms/step 19.464 tok/step 2.618 ms/token 7.434; per-prompt ms/step min 18.628 max 23.35
+2026-11-18 17:43:36 UTC [a5 stock] c1-b rc=0 pass B: 20/20 prompts, errors 0; decode tok/s 138.29 (20 timed); ms/step 19.439 tok/step 2.657 ms/token 7.316; per-prompt ms/step min 18.48 max 22.522
+2026-11-18 17:44:15 UTC [a5 stock] c8 rc=0 conc C8: 40/40 ok, errors 0; aggregate 235.8 tok/s over 39.13 s; per-stream decode p50 35.15 min 19.13 tok/s; TTFT p50 0.296 max 0.518 s; alive True
+2026-11-18 17:44:57 UTC [a5 stock] c32 rc=0 conc C32: 64/64 ok, errors 0; aggregate 349.0 tok/s over 42.1 s; per-stream decode p50 18.65 min 10.7 tok/s; TTFT p50 3.345 max 15.252 s; alive True
+2026-11-18 17:45:32 UTC [a5 stock] c1-a2 rc=0 pass A: 20/20 prompts, errors 0; decode tok/s 136.05 (20 timed); ms/step 19.467 tok/step 2.618 ms/token 7.435; per-prompt ms/step min 18.616 max 23.367
+2026-11-18 17:45:32 UTC [a5 stock] cells done
+a5 rc=0
+end 2026-11-18T17:45:32Z
+DONE

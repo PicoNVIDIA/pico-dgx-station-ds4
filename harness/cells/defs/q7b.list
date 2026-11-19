@@ -1,0 +1,5 @@
+# K6 measured. k6b and k6l2 keep a 1M context; k6l4 and k6l6 use the memory budget of the h292u98 cell.
+k6b|c1 s:8,32x2 id
+k6l2|c1 s:8,32x2 id
+k6l4|c1 s:2,4,8,16,32x2 pf id
+k6l6|c1 s:8,32x2 id

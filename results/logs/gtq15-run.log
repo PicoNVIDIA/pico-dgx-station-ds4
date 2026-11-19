@@ -1,0 +1,30 @@
+start 2026-11-19T05:26:59Z
+== CELL rulerchk  [s:2,8,32x1]  05:26:59
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 302 -> /raid/work/run/cells/hot-302.json
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-302.json, all entries >= 0, permutat
+serving at 05:37:04; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 49.5 s, registered 0.22 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 521,740 tokens, Maximum concurrency for 262,144 tokens per request: 1.99x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+rulerchk-streams1-r1: | 2 | 546 | 272.9 | 3.475 | 60 |
+rulerchk-streams1-r1: | 8 | 1,197 | 149.6 | 3.047 | 60 |
+rulerchk-streams1-r1: | 32 | 2,281 | 71.3 | 3.025 | 60 |
+client-counted windows rc=0
+rulerchk-client: gsm8k_c1: 424.5 tok/s over 60.0 s, request errors 0 (server counter 424.5)
+rulerchk-client: greedy_c1: 516.0 tok/s over 60.0 s, request errors 0 (server counter 516.0)
+rulerchk-client: 2 streams: 619.7 tok/s aggregate, 309.8 a stream, request errors 0 (server counter 619.7)
+rulerchk-client: 8 streams: 1201.5 tok/s aggregate, 150.2 a stream, request errors 0 (server counter 1201.5)
+rulerchk-client: 32 streams: 2285.6 tok/s aggregate, 71.4 a stream, request errors 0 (server counter 2285.6)
+rulerchk-client: status PASS failed stages []
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 1441399, "copied_since": 9713, "enabled": true, "event": "stage_skip", "host_steps": 50432, "lanes": 1, "mismatch_words": 0, "skipped": 205558, "skipped_since": 299, "swap_invalidations": 13823
+after: ds41 Up 21 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 9294, "cold_share": 0.004879662298387097, "drains": 788, "event": "drain", "freeze": false, "host_steps": 50432, "hot_moved": 1959, "pending": 0, "queued": 0, "sel": 1904640, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 138
+CELL_DONE rulerchk 05:48:46
+end 2026-11-19T05:48:46Z
+DONE

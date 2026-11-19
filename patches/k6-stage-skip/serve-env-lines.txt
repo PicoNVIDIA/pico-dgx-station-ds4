@@ -1,0 +1,6 @@
+# Add these three lines to tree/serve/serve.sh, inside start_vllm(), right after the line
+#   [ -n "${DS41_PEER3_SPINS:-}" ] && envs+=(-e "PEER3_SPINS=$DS41_PEER3_SPINS")
+# (serve.sh:324 in the gt-built copy). They forward the policy.env settings into the container only when set.
+  [ -n "${DS41_GT_STAGE_SKIP:-}" ] && envs+=(-e "GRACETIER_STAGE_SKIP=$DS41_GT_STAGE_SKIP")
+  [ -n "${DS41_GT_SCRATCH_LANES:-}" ] && envs+=(-e "GRACETIER_SCRATCH_LANES=$DS41_GT_SCRATCH_LANES")
+  [ -n "${DS41_GT_STAGE_SKIP_AUDIT:-}" ] && envs+=(-e "GRACETIER_STAGE_SKIP_AUDIT=$DS41_GT_STAGE_SKIP_AUDIT")

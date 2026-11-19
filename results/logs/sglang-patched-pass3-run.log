@@ -1,0 +1,34 @@
+start 2026-11-19T05:00:21Z
+boot: up=1 after 498 s; gpu 226975 MiB; host used 492 GiB, free 18 GiB
+-- w-fixed [fixed] 05:08:41
+w-fixed: rc=0
+w-fixed: fixed: 135.6 (135.6-135.8, n=3) tok/s; TTFT 538 (487-586, n=3) ms; out tokens 2048 (2048-2048, n=3); prompt 2671 (2671-2672, n=3)
+w-fixed: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 4864, full token usage: 0.00, #window_128 token: 768, window_128 token usage: 0.01, cuda graph: True, gen throughput (token/s): 138.09, #queue-req: 0
+-- w-c1 [gsm8k_c1,greedy_c1] 05:09:46
+w-c1: rc=0
+w-c1: gsm8k_c1: 124.8 tok/s over 60.0 s, request errors 0 (server counter 125.6)
+w-c1: greedy_c1: 127.3 tok/s over 60.0 s, request errors 0 (server counter 128.6)
+w-c1: status PASS failed stages []
+  server: Decode batch, #running-req: 1, #full token: 256, full token usage: 0.00, #window_128 token: 256, window_128 token usage: 0.00, cuda graph: True, gen throughput (token/s): 149.45, #queue-req: 0
+-- w-streams [streams] 05:12:26
+w-streams: rc=0
+w-streams: 2 streams: 209.7 tok/s aggregate, 104.9 a stream, request errors 0 (server counter 191.1)
+w-streams: 4 streams: 298.6 tok/s aggregate, 74.7 a stream, request errors 0 (server counter 304.4)
+w-streams: 8 streams: 377.3 tok/s aggregate, 47.2 a stream, request errors 0 (server counter 337.0)
+w-streams: 16 streams: 486.1 tok/s aggregate, 30.4 a stream, request errors 0 (server counter 455.2)
+w-streams: 32 streams: 542.9 tok/s aggregate, 17.0 a stream, request errors 0 (server counter 490.0)
+w-streams: status PASS failed stages []
+  server: Decode batch, #running-req: 32, #full token: 15360, full token usage: 0.00, #window_128 token: 12800, window_128 token usage: 0.12, cuda graph: True, gen throughput (token/s): 599.55, #queue-req: 0
+-- w-streams-r2 [streams] 05:19:07
+w-streams-r2: rc=0
+w-streams-r2: 2 streams: 205.9 tok/s aggregate, 102.9 a stream, request errors 0 (server counter 212.3)
+w-streams-r2: 4 streams: 296.0 tok/s aggregate, 74.0 a stream, request errors 0 (server counter 289.8)
+w-streams-r2: 8 streams: 379.1 tok/s aggregate, 47.4 a stream, request errors 0 (server counter 325.8)
+w-streams-r2: 16 streams: 456.7 tok/s aggregate, 28.5 a stream, request errors 0 (server counter 442.3)
+w-streams-r2: 32 streams: 561.3 tok/s aggregate, 17.5 a stream, request errors 0 (server counter 494.5)
+w-streams-r2: status PASS failed stages []
+  server: Decode batch, #running-req: 32, #full token: 14848, full token usage: 0.00, #window_128 token: 11520, window_128 token usage: 0.11, cuda graph: True, gen throughput (token/s): 368.18, #queue-req: 0
+after cleanup: gpu 1 MiB; host used 30 GiB, free 481 GiB
+end 2026-11-19T05:26:05Z
+DONE

@@ -1,0 +1,489 @@
+--- a/tree/fastpath/fastpath_gracetier.py	2026-11-18 15:50:44
++++ b/tree/fastpath/fastpath_gracetier.py	2026-11-18 16:06:07
+@@ -143,6 +143,14 @@
+ RES_CONFIG = os.environ.get("GRACETIER_RES_CONFIG") or os.path.join(_DIR, "gracetier-res.json")
+ RES_MODES = ("adaptive", "off")
+ REPLAY_CHECKS = 256            # CUDA graph replays inside execute_model whose stream is compared with the barrier's
++# K6 stage skip (research/K6-stage-skip.md). All three unset: no extra tensor, the same kernels, the same launches.
++STAGE_SKIP_ENV = os.environ.get("GRACETIER_STAGE_SKIP", "")              # "1": skip a copy the scratch still holds
++SCRATCH_LANES_ENV = os.environ.get("GRACETIER_SCRATCH_LANES", "")        # N scratches; layer l stages into l % N
++STAGE_SKIP_AUDIT_ENV = os.environ.get("GRACETIER_STAGE_SKIP_AUDIT", "")  # N > 0: about 1 skip in N is byte-compared
++SKIP_TICK = 64                 # steps between two reads of the skip counters (the residency drain's default cadence)
++SKIP_LOG_TICKS = 64            # one server-log line per this many reads (and for each of the first four)
++SKIP_STAT = 4                  # device counters per layer: copies done, copies skipped, skips audited, bad words
++MAX_LANES = 64
+ _UNSET = object()
+ 
+ 
+@@ -165,6 +173,42 @@
+     return doc if doc["mode"] == "adaptive" else None
+ 
+ 
++def skip_config(skip=None, lanes=None, audit=None) -> tuple:
++    """(skip on, scratch lanes, audit period) from GRACETIER_STAGE_SKIP / _SCRATCH_LANES / _STAGE_SKIP_AUDIT. Unset
++    or empty = (False, 1, 0), the engine as it was. A value that is not clean raises: a typo must not mean off."""
++    s = STAGE_SKIP_ENV if skip is None else str(skip)
++    if s not in ("", "0", "1"):
++        raise RuntimeError(f"gracetier: GRACETIER_STAGE_SKIP={s!r} must be 1, 0 or unset")
++    out = []
++    for name, v, lo, hi, dflt in (("GRACETIER_SCRATCH_LANES", SCRATCH_LANES_ENV if lanes is None else str(lanes),
++                                  1, MAX_LANES, 1),
++                                 ("GRACETIER_STAGE_SKIP_AUDIT", STAGE_SKIP_AUDIT_ENV if audit is None else
++                                  str(audit), 0, 2 ** 30, 0)):
++        if v == "":
++            out.append(dflt)
++            continue
++        if not v.isdigit() or not lo <= int(v) <= hi:
++            raise RuntimeError(f"gracetier: {name}={v!r} must be an integer in [{lo}, {hi}] or unset")
++        out.append(int(v))
++    if out[1] and s != "1":
++        raise RuntimeError("gracetier: GRACETIER_STAGE_SKIP_AUDIT is set but GRACETIER_STAGE_SKIP is not 1")
++    return s == "1", out[0], out[1]
++
++
++def lane_of(idx: int, lanes: int) -> int:
++    """The scratch lane of layer idx: layers that share a lane share one physical scratch and one tag table."""
++    return int(idx) % int(lanes)
++
++
++def skip_delta(cur, prev, tot) -> list:
++    """Add the growth of the int32 device counters cur over prev ([L][n] lists; the device words may wrap) to the
++    host totals tot [n], in place. Returns tot."""
++    for a, b in zip(cur, prev):
++        for i in range(len(tot)):
++            tot[i] += (int(a[i]) - int(b[i])) & 0xFFFFFFFF
++    return tot
++
++
+ def load_allres(path: str, n_experts: int = E) -> dict:
+     """{layer: {"hot", "cold", "row"}} from make_rowmap_allres.py's JSON; raises unless every layer's hot / cold is a
+     partition of 0..E-1 and row is the all-resident map of it (every entry >= 0, hot -> 0..H-1, cold -> H..E-1)."""
+@@ -309,6 +353,8 @@
+         self.g2e = self.ecnt = self.count_ids = None    # A3 residency (adaptive mode only): the per-expert counter
+         self.b1 = self.b2 = 0
+         self.vas = None
++        self.lane = 0                                   # K6: which physical scratch backs the cold groups
++        self.skw = {}                                   # K6: {} or {"skip": (...)}, passed to every gt_stage
+ 
+ 
+ # ================================================================================================ process state
+@@ -359,6 +405,19 @@
+         self.res_rechecked: Any = False
+         self.res_replays: Any = 0
+         self.res_eager: Any = 0
++        # K6 stage skip (all unused when GRACETIER_STAGE_SKIP / GRACETIER_SCRATCH_LANES are unset)
++        self.skip_cfg: Any = None        # (skip on, lanes, audit period), checked at boot
++        self.lane_shared: Any = None     # [lane] -> {"l1", "l2"} physical scratch; [0] is self.shared
++        self.skip_tags: Any = None       # [lane] -> int32 [Cmax * NPROG] device: what each scratch slot holds
++        self.skip_stat: Any = None       # int32 [L, SKIP_STAT] device counters (one row per layer)
++        self.skip_ctl: Any = None        # int32 [2] device: [0] skip allowed, [1] host step number (audit)
++        self.skip_lane: Any = {}         # layer -> lane, for the layers that pass tags to gt_stage
++        self.skip_prev: Any = None       # the device counters at the last read
++        self.skip_tot: Any = [0] * SKIP_STAT
++        self.skip_last: Any = [0] * SKIP_STAT
++        self.skip_steps: Any = 0
++        self.skip_swaps: Any = 0         # tag rows forgotten because the residency manager swapped the slot
++        self.skip_off_why: Any = None    # set when the skip was turned off on the device after boot
+ 
+ 
+ _S = _State()
+@@ -380,6 +439,26 @@
+     return _S.res_cfg
+ 
+ 
++def _skip_cfg() -> tuple:
++    """K6: the cached (skip on, lanes, audit period), checked at first use (boot). The skip needs cold slot c to be
++    the same scratch bytes in every layer of a lane, which holds when every layer has the same hot count; if not,
++    the skip stays off and every copy is done."""
++    if _S.skip_cfg is None:
++        on, lanes, aud = skip_config()
++        hs = sorted({len(v["hot"]) for v in _allres().values()})
++        if lanes > len(_S.allres):
++            raise RuntimeError(f"gracetier: GRACETIER_SCRATCH_LANES={lanes} > {len(_S.allres)} layers")
++        if on and len(hs) != 1:
++            _log(f"K6 stage skip DISABLED: the layers have different hot counts {hs}, so cold slot c is not the same "
++                 f"scratch bytes in every layer; every copy is done")
++            on, aud = False, 0
++        _S.skip_cfg = (on, lanes, aud)
++        if on or lanes > 1:
++            _log(f"K6 stage skip {'ON' if on else 'off'}; scratch lanes {lanes} (layer l uses lane l % {lanes}); "
++                 f"audit {'off' if not aud else f'about 1 skip in {aud}'}")
++    return _S.skip_cfg
++
++
+ def _rt():
+     """Our runtime package from RT_DIR (gracetier_*, dg_mega, dg_moe, host_tier, ckpt; no vllm). With residency on
+     also gracetier_res + residency_policy (the card copies them only for that mode)."""
+@@ -509,11 +588,17 @@
+         plans = [R.GV.plan_layer(E, len(v["hot"]), HIDDEN, INTER, _S.arena.gran) for v in _S.allres.values()]
+         sizes = R.GV.shared_sizes(plans)
+         _S.shared = {k: _S.arena.alloc(n, f"shared.{k}") for k, n in sizes.items() if n > 0}
++        _S.lane_shared = [_S.shared] + [{k: _S.arena.alloc(n, f"shared{j}.{k}") for k, n in sizes.items() if n > 0}
++                                        for j in range(1, _skip_cfg()[1])]      # K6: lanes 1.. (none by default)
+         bud = R.GV.hbm_budget([len(v["hot"]) for v in _S.allres.values()], E, HIDDEN, INTER, _S.arena.gran)
+         sh = {k: round(a.nbytes / GiB, 3) for k, a in _S.shared.items()}
+         _log(f"VMM: granularity {_S.arena.gran} B; shared scratch {sh} GiB; plan for all layers: "
+              f"weights {bud['weights_total_GiB']} GiB (shared {bud['shared_total_GiB']}, straddle "
+              f"{bud['straddle_GiB']}), SF all groups {bud['sf_GiB']} GiB")
++        if len(_S.lane_shared) > 1:
++            extra = sum(a.nbytes for d in _S.lane_shared[1:] for a in d.values())
++            _log(f"K6 scratch lanes: {len(_S.lane_shared)} physical scratches; the {len(_S.lane_shared) - 1} "
++                 f"extra one(s) take {extra / GiB:.3f} GiB of HBM that the plan above does not count")
+     return _S.arena, _S.shared
+ 
+ 
+@@ -624,10 +709,10 @@
+     GS = _rt().GS
+     for P in PREWARM_P:
+         g = torch.full((P,), -1, dtype=torch.int64, device=dev)
+-        GS.gt_stage(g, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2)
++        GS.gt_stage(g, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2, **st.skw)
+         if st.ecnt is not None:
+             GS.gt_stage(g, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2, g2e=st.g2e, ecnt=st.ecnt,
+-                        count_ids_max=st.count_ids)
++                        count_ids_max=st.count_ids, **st.skw)
+     torch.cuda.synchronize(dev)
+     _S.prewarmed.add(key)
+ 
+@@ -646,6 +731,93 @@
+     st.g2e = torch.tensor(R.GR.g2e_list(st.row_allres), dtype=torch.int32, device="cpu").to(dev)
+     st.ecnt = _S.res_cnt[st.idx]
+     st.count_ids = R.GS.count_ids(cfg.count_tokens_max, TOPK)
++
++
++def _skip_finalize(st, dev) -> None:
++    """K6, GRACETIER_STAGE_SKIP=1 only: the tables gt_stage's skip kernel reads and writes for this layer, at
++    addresses fixed from here on (so before any graph capture): its lane's tag table (all -1 = nothing known), the
++    group -> expert table the key is read from, the control words and this layer's counter row. Off: nothing is
++    built and st.skw stays {}."""
++    on, lanes, aud = _skip_cfg()
++    if not on:
++        return
++    import torch
++
++    GS = _rt().GS
++    if not hasattr(GS, "gt_stage_skip_kernel"):
++        raise RuntimeError("gracetier: GRACETIER_STAGE_SKIP=1 but runtime/gracetier_stage.py has no skip kernel (an "
++                           "old copy in gracetier_rt/)")
++    if st.idx in _S.skip_lane:
++        raise RuntimeError(f"gracetier layer {st.idx}: finalized twice; two modules would share one tag key. "
++                           f"Refusing.")
++    if _S.skip_tags is None:
++        cmax = max(len(v["cold"]) for v in _S.allres.values())
++        _S.skip_tags = [torch.full((cmax * GS.NPROG_DEFAULT,), -1, dtype=torch.int32, device=dev)
++                        for _ in range(lanes)]
++        _S.skip_stat = torch.zeros(max(_S.allres) + 1, SKIP_STAT, dtype=torch.int32, device=dev)
++        _S.skip_ctl = torch.tensor([1, 0], dtype=torch.int32, device="cpu").to(dev)
++    kg2e = st.g2e                   # residency on: the table the manager rewrites at every swap
++    if kg2e is None:                # residency off: nothing ever moves; the inverse of the boot row_map
++        inv = [0] * E
++        for e, g in enumerate(st.row_allres):
++            inv[g] = e
++        kg2e = torch.tensor(inv, dtype=torch.int32, device="cpu").to(dev)
++    _S.skip_lane[st.idx] = st.lane
++    st.skw = {"skip": (_S.skip_tags[st.lane], kg2e, st.idx * E, _S.skip_ctl, _S.skip_stat[st.idx], aud)}
++
++
++def _skip_on_swap(l: int, c: int) -> None:
++    """K6: the residency manager swapped layer l's cold slot c (gracetier_res._actuate wrote scratch group H + c and
++    Grace slot c). Forget what that scratch slot holds, on the swap's own stream and inside its inference_mode block,
++    so the next pick of the slot copies. An unknown layer raises (KeyError): the swap is not committed."""
++    n = _S.rt.GS.NPROG_DEFAULT
++    _S.skip_tags[_S.skip_lane[int(l)]][int(c) * n:(int(c) + 1) * n].fill_(-1)
++    _S.skip_swaps += 1
++
++
++def _skip_tick(m) -> None:
++    """K6, between two steps (execute_model entry, after the barrier). Audit on: advance the device step number the
++    kernel samples its audits with. Every SKIP_TICK steps: read the device counters (one blocking D2H of 4 int32 per
++    layer), add their growth to the host totals, write one record to the residency telemetry file and, less often,
++    one server-log line. If an audited skip found a differing word, the skip is turned off on the device (ctl[0] = 0:
++    every launch copies from then on, also inside captured graphs) and the log says so."""
++    import torch
++
++    if torch.cuda.is_current_stream_capturing():
++        return
++    _S.skip_steps += 1
++    if _S.skip_cfg[2]:
++        with torch.inference_mode():
++            _S.skip_ctl[1:2].add_(1)
++    if _S.skip_steps % SKIP_TICK:
++        return
++    cur = _S.skip_stat.detach().cpu().tolist()
++    tot = skip_delta(cur, _S.skip_prev or [[0] * SKIP_STAT for _ in cur], _S.skip_tot)
++    _S.skip_prev = cur
++    since = [a - b for a, b in zip(tot, _S.skip_last)]
++    _S.skip_last = list(tot)
++    killed = False
++    if tot[3] and _S.skip_off_why is None:
++        with torch.inference_mode():
++            _S.skip_ctl[0:1].fill_(0)
++        _S.skip_off_why = f"audit: {tot[3]} word(s) of a skipped slot differed from the Grace source"
++        killed = True
++    n = _S.skip_steps // SKIP_TICK
++    rec = {"event": "stage_skip", "host_steps": _S.skip_steps, "copied": tot[0], "skipped": tot[1],
++           "audited": tot[2], "mismatch_words": tot[3], "copied_since": since[0], "skipped_since": since[1],
++           "swap_invalidations": _S.skip_swaps, "lanes": len(_S.skip_tags), "audit": _S.skip_cfg[2],
++           "enabled": _S.skip_off_why is None}
++    emit = getattr(m, "_emit", None)
++    if emit is not None:
++        emit(rec)
++    if killed or n <= 4 or n % SKIP_LOG_TICKS == 0:
++        hit = 100.0 * tot[1] / max(1, tot[0] + tot[1])
++        _log(f"K6 stage skip: steps {_S.skip_steps} copies {tot[0]} skipped {tot[1]} ({hit:.1f} % of staged experts; "
++             f"last {SKIP_TICK} steps: {since[0]} / {since[1]}) audited {tot[2]} mismatch_words {tot[3]} "
++             f"swap_invalidations {_S.skip_swaps} lanes {len(_S.skip_tags)} enabled {int(_S.skip_off_why is None)}")
++    if killed:
++        _log(f"K6 stage skip ERROR: {_S.skip_off_why}. The skip is now OFF on the device (every copy is done). "
++             f"Output produced before this line is suspect.")
+ 
+ 
+ def _finalize_layer(module, st, dev, snap, why_no_snap) -> None:
+@@ -661,6 +833,8 @@
+                                f"expected {shp} 1-byte")
+     csf1, csf2 = _cold_sf_of(st.idx)
+     arena, shared = _vmm(dev)
++    st.lane = lane_of(st.idx, _skip_cfg()[1])
++    shared = _S.lane_shared[st.lane]           # K6: lane 0 is the first build's one scratch (the default)
+     plans = R.GV.plan_layer(E, H, D, I, arena.gran)
+     va1 = R.GV.GroupedVA(arena, plans["l1"], shared.get("l1"), map_hot=True, name=f"L{st.idx}.l1")
+     va2 = R.GV.GroupedVA(arena, plans["l2"], shared.get("l2"), map_hot=True, name=f"L{st.idx}.l2")
+@@ -693,6 +867,7 @@
+     if _res_doc() is not None:      # A3 residency: the counter tables, and the module the manager reads at load end
+         _res_finalize(st, dev)
+         _S.modules[st.idx] = module
++    _skip_finalize(st, dev)         # K6: after _res_finalize (it reads st.g2e), before _prewarm
+     # [inferred] what the boundary's get_block_m_for_mega_moe (B/:1344) and vLLM's stock forward read for G
+     module.num_experts = E
+     module.num_local_experts = E
+@@ -715,12 +890,12 @@
+     if st.src_tab is None:
+         raise RuntimeError(f"gracetier layer {st.idx}: forward before finalize")
+     if st.ecnt is None:
+-        _S.rt.GS.gt_stage(groups, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2)
++        _S.rt.GS.gt_stage(groups, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2, **st.skw)
+         return
+     if _S.res_in_exec:
+         _res_check_eager()
+     _S.rt.GS.gt_stage(groups, st.H, st.src_tab, st.dtab, st.cnt, st.b1, st.b2, g2e=st.g2e, ecnt=st.ecnt,
+-                      count_ids_max=st.count_ids)
++                      count_ids_max=st.count_ids, **st.skw)
+ 
+ 
+ def stage_symm(experts, symm, T: int) -> None:
+@@ -803,6 +978,11 @@
+     _S.res_bound = bound
+     _S.res = R.GR.GtResManager(views, {l: v["hot"] for l, v in _S.allres.items()},
+                                {l: v["cold"] for l, v in _S.allres.items()}, _S.res_cnt, cfg, log=_log)
++    if _S.skip_tags is not None:        # K6: every swap must forget the tag of the scratch slot it wrote
++        if not hasattr(_S.res, "on_swap"):
++            raise RuntimeError("gracetier: GRACETIER_STAGE_SKIP=1 but runtime/gracetier_res.py has no on_swap hook (an "
++                               "old copy in gracetier_rt/); a swap would leave a stale scratch tag. Refusing.")
++        _S.res.on_swap = _skip_on_swap
+     if cuda:
+         _install_replay_check()
+     _log(f"residency: manager over {len(views)} layers; the SF banks it swaps are module._transformed_l1/l2_weights[1] "
+@@ -869,10 +1049,14 @@
+     def execute_model(self, *args, **kwargs):
+         m = _S.res
+         if m is None:
++            if _S.skip_tags is not None:        # K6, residency off: only the counters
++                _skip_tick(None)
+             return orig(self, *args, **kwargs)
+         if not _S.res_rechecked:
+             _res_recheck()
+         m.barrier()
++        if _S.skip_tags is not None:            # K6: counters and the audit step number, after the barrier
++            _skip_tick(m)
+         _S.res_in_exec = True
+         try:
+             return orig(self, *args, **kwargs)
+@@ -981,6 +1165,7 @@
+     if getattr(hook_forward, "__module__", "") == "fastpath_peer3":
+         raise RuntimeError("gracetier and peer3 are exclusive: disarm peer3 (and coldskip)")
+     _allres()
++    _skip_cfg()                     # K6: a bad GRACETIER_STAGE_SKIP / _SCRATCH_LANES value raises here
+     _S.hk = orig
+     _S.hk_forward = hook_forward
+     if isinstance(g.get("_PREFIX"), re.Pattern):
+@@ -1076,6 +1261,17 @@
+         if _res_doc() is not None:      # A3: the residency manager (boot digests of every expert), before KV sizing
+             with bounded("gracetier residency manager (tables check + boot digests)", FINALIZE_S):
+                 _res_create()
++        if _skip_cfg()[0]:              # K6: every layer passes tags, or none does
++            if set(_S.skip_lane) != want or _S.skip_tags is None:
++                raise RuntimeError(f"gracetier: stage skip is on but only layers {sorted(_S.skip_lane)} pass tags to "
++                                   f"gt_stage; a layer without tags would overwrite a tagged slot. Refusing.")
++            if _S.res is not None and getattr(_S.res, "on_swap", None) is not _skip_on_swap:
++                raise RuntimeError("gracetier: stage skip is on but the residency manager has no swap callback; a "
++                                   "swap would leave a stale scratch tag. Refusing.")
++            _log(f"K6 stage skip ARMED: {len(_S.skip_lane)} layers, {len(_S.skip_tags)} lane(s), tags int32 "
++                 f"[{int(_S.skip_tags[0].numel())}] per lane all -1, audit {_skip_cfg()[2]}, swap hook "
++                 f"{'installed' if _S.res is not None else 'not needed (residency off)'}; counters every "
++                 f"{SKIP_TICK} steps")
+         _hook_activate(NAME)
+         hs = sorted({len(v["hot"]) for v in _S.allres.values()})
+         _log(f"ENGAGED: {len(_S.layers_done)} layers, H {hs}, G = {E}, {_S.tensors_read} cold tensors in Grace "
+@@ -1087,5 +1283,5 @@
+ 
+     load_model._ds41_gracetier = True
+     cls.load_model = load_model
+-    if _res_doc() is not None:          # A3: the barrier. Residency off: execute_model is not touched.
++    if _res_doc() is not None or skip_config()[0]:  # A3: the barrier (K6: or the skip counters). Neither: untouched
+         _wrap_execute_model(cls)
+--- a/tree/fastpath/gracetier_rt/runtime/gracetier_res.py	2026-11-18 15:50:44
++++ b/tree/fastpath/gracetier_rt/runtime/gracetier_res.py	2026-11-18 15:54:46
+@@ -279,6 +279,7 @@
+             self.cnt_host = torch.zeros(self.L, self.E, dtype=torch.int32, device="cpu", pin_memory=self.cuda)
+         self.host_steps = 0
+         self.stream: Optional[int] = None                      # the cuda_stream handle the barriers run on
++        self.on_swap: Optional[Callable[[int, int], None]] = None   # K6 stage skip: (layer, cold slot) per swap
+         self._pending_read = None
+         self._last_cur = np.zeros((self.L, self.E), dtype=np.int64)
+         self._swaps_at_drain = 0
+@@ -488,6 +489,8 @@
+         v.row_map[e_out].fill_(s)
+         v.g2e[g].fill_(e_in)
+         v.g2e[s].fill_(e_out)
++        if self.on_swap is not None:                                        # K6: scratch group H + c changed
++            self.on_swap(l, c)
+         return True
+ 
+     def _committed(self, item: dict) -> None:
+--- a/tree/fastpath/gracetier_rt/runtime/gracetier_stage.py	2026-11-18 15:50:44
++++ b/tree/fastpath/gracetier_rt/runtime/gracetier_stage.py	2026-11-18 16:06:07
+@@ -220,6 +220,89 @@
+                 b_off = (q + ib * NPROG) * BW + tl.arange(0, BW)
+                 b_m = b_off < W2
+                 tl.store(b_dst + b_off, tl.load(b_src + b_off, mask=b_m), mask=b_m)
++
++    @triton.jit
++    def gt_stage_skip_kernel(groups, P, H, src_tab, dtab, cnt, W1, W2, g2e, ecnt, tag, KBASE, ctl, stat,
++                             PB: tl.constexpr, BW: tl.constexpr, NPROG: tl.constexpr, COUNT: tl.constexpr,
++                             ECNT: tl.constexpr, AUD: tl.constexpr):
++        """K6 stage skip: gt_stage_kernel (ECNT: gt_stage_count_kernel) whose program (c, q) copies its blocks only
++        when the scratch slot does not hold them already.
++          tag   int32 [C * NPROG], one word per program: the key of the (layer, expert) whose bytes program q's
++                blocks of scratch slot c hold, -1 = unknown. Every layer mapped on the same physical scratch shares
++                the table. Written only by this kernel (after its copy) and by the host between steps (-1 on a swap).
++          key   KBASE + g2e[H + c]: KBASE = layer * 384, g2e[H + c] = the expert in this layer's cold slot c NOW
++                (read on the device: a swap rewrites g2e between steps, so the key follows the slot's contents).
++          ctl   int32 [2]: [0] != 0 allows skips (0 = copy always; the tags are still kept), [1] = the host's step
++                number (advanced between steps when AUD > 0).
++          stat  int32 [4]: program (c, 0) adds copies done [0], copies skipped [1], skips audited [2]; every
++                program adds the words that differed in an audited skip [3].
++          AUD   > 0: a skip of slot c is audited when (ctl[1] + c) % AUD == 0 -- the slot is compared with the
++                Grace source word for word, then copied anyway.
++        tag == key and ctl[0] != 0: no copy. Otherwise gt_stage_kernel's copy, statement for statement, then
++        tag = key. A program reads and writes only its own tag word and its own blocks: no race inside a launch."""
++        c = tl.program_id(0)
++        q = tl.program_id(1)
++        want = H + c
++        acc = tl.zeros([PB], dtype=tl.int32)
++        for it in range(0, (P + PB - 1) // PB):
++            offs = it * PB + tl.arange(0, PB)
++            gv = tl.load(groups + offs, mask=offs < P, other=-1)
++            acc += (gv == want).to(tl.int32)
++            if ECNT:
++                if c == 0:
++                    if q == 0:
++                        e_m = gv >= 0
++                        e_id = tl.load(g2e + gv, mask=e_m, other=0)
++                        tl.atomic_add(ecnt + e_id, e_m.to(tl.int32), mask=e_m, sem="relaxed")
++        hits = tl.sum(acc, axis=0)
++        if hits > 0:
++            if COUNT:
++                if q == 0:
++                    tl.atomic_add(cnt + c, hits)
++            key = KBASE + tl.load(g2e + want)
++            t_ptr = tag + c * NPROG + q
++            skip = ((tl.load(t_ptr) == key) & (tl.load(ctl) != 0)).to(tl.int32)
++            grp = (hits * 0 + c + H).to(tl.int64)
++            a_src = tl.multiple_of(tl.load(src_tab + 2 * c).to(tl.pointer_type(tl.int64)), 16)
++            a_dst = tl.multiple_of(tl.load(dtab + 0).to(tl.pointer_type(tl.int64)), 16) + grp * W1
++            nb1 = (W1 + BW - 1) // BW
++            b_src = tl.multiple_of(tl.load(src_tab + 2 * c + 1).to(tl.pointer_type(tl.int64)), 16)
++            b_dst = tl.multiple_of(tl.load(dtab + 1).to(tl.pointer_type(tl.int64)), 16) + grp * W2
++            nb2 = (W2 + BW - 1) // BW
++            if skip == 0:
++                for ia in range(0, (nb1 + NPROG - 1) // NPROG):
++                    a_off = (q + ia * NPROG) * BW + tl.arange(0, BW)
++                    a_m = a_off < W1
++                    tl.store(a_dst + a_off, tl.load(a_src + a_off, mask=a_m), mask=a_m)
++                for ib in range(0, (nb2 + NPROG - 1) // NPROG):
++                    b_off = (q + ib * NPROG) * BW + tl.arange(0, BW)
++                    b_m = b_off < W2
++                    tl.store(b_dst + b_off, tl.load(b_src + b_off, mask=b_m), mask=b_m)
++                tl.store(t_ptr, key)
++            chk = skip * 0
++            if AUD:
++                chk = skip * ((tl.load(ctl + 1) + c) % AUD == 0).to(tl.int32)
++                if chk > 0:
++                    bad = hits * 0
++                    for ja in range(0, (nb1 + NPROG - 1) // NPROG):
++                        c_off = (q + ja * NPROG) * BW + tl.arange(0, BW)
++                        c_m = c_off < W1
++                        c_sv = tl.load(a_src + c_off, mask=c_m, other=0)
++                        c_dv = tl.load(a_dst + c_off, mask=c_m, other=0)
++                        bad += tl.sum((c_sv != c_dv).to(tl.int32), axis=0)
++                        tl.store(a_dst + c_off, c_sv, mask=c_m)
++                    for jb in range(0, (nb2 + NPROG - 1) // NPROG):
++                        d_off = (q + jb * NPROG) * BW + tl.arange(0, BW)
++                        d_m = d_off < W2
++                        d_sv = tl.load(b_src + d_off, mask=d_m, other=0)
++                        d_dv = tl.load(b_dst + d_off, mask=d_m, other=0)
++                        bad += tl.sum((d_sv != d_dv).to(tl.int32), axis=0)
++                        tl.store(b_dst + d_off, d_sv, mask=d_m)
++                    tl.atomic_add(stat + 3, bad)
++            if q == 0:
++                tl.atomic_add(stat + 0, 1 - skip)
++                tl.atomic_add(stat + 1, skip)
++                tl.atomic_add(stat + 2, chk)
+ 
+     @triton.jit
+     def gt_read_kernel(src_tab, n_src, W, out, BW: tl.constexpr, NPROG: tl.constexpr):
+@@ -254,12 +337,15 @@
+ def gt_stage(groups: torch.Tensor, H: int, src_tab: torch.Tensor, dtab: torch.Tensor, cnt: Optional[torch.Tensor],
+              b1: int, b2: int, *, nprog: Optional[int] = None, block_words: Optional[int] = None,
+              num_warps: Optional[int] = None, g2e: Optional[torch.Tensor] = None,
+-             ecnt: Optional[torch.Tensor] = None, count_ids_max: Optional[int] = None) -> Tuple[int, int]:
++             ecnt: Optional[torch.Tensor] = None, count_ids_max: Optional[int] = None,
++             skip: Optional[tuple] = None) -> Tuple[int, int]:
+     """ONE launch of gt_stage_kernel over the C = src_tab.shape[0] cold slots. groups: contiguous int64 (any shape;
+     flattened). b1 / b2: bytes of one L1 / L2 group. Returns the grid.
+     A3, optional: g2e int32 [G] + ecnt int32 [E] (one layer's counter row) -> a call with at most count_ids_max ids
+     (default count_ids()) launches gt_stage_count_kernel instead, which also counts every pick per expert. A larger
+-    call, or no g2e / ecnt, launches gt_stage_kernel with the first build's arguments."""
++    call, or no g2e / ecnt, launches gt_stage_kernel with the first build's arguments.
++    K6, optional: skip = (tag, key_g2e, kbase, ctl, stat, audit) launches gt_stage_skip_kernel instead (see its
++    docstring). Absent (the default): every line below runs as before."""
+     if not HAVE_TRITON:
+         raise RuntimeError("gt_stage needs triton (box) -- the Mac runs stage_emulated")
+     if groups.dtype != torch.int64 or not groups.is_contiguous():
+@@ -277,6 +363,26 @@
+     count = cnt is not None
+     if (g2e is None) != (ecnt is None):
+         raise ValueError("gt_stage: g2e and ecnt go together")
++    if skip is not None and C >= 1:
++        tag, kg2e, kbase, ctl, stat, aud = skip
++        if npg != NPROG_DEFAULT or bw != BLOCK_WORDS_DEFAULT:
++            raise ValueError("gt_stage: the skip tags are one word per default program; nprog / block_words "
++                             "must be the defaults")
++        for t, n, what in ((tag, C * npg, "tag"), (kg2e, int(H) + C, "key g2e"), (ctl, 2, "ctl"),
++                           (stat, 4, "stat")) + (() if ecnt is None else ((ecnt, 1, "ecnt"),)):
++            if t.dtype != torch.int32 or t.dim() != 1 or not t.is_contiguous() or t.numel() < n:
++                raise ValueError(f"gt_stage: skip {what} must be contiguous int32 [>= {n}]")
++        if ecnt is not None and g2e is not kg2e:
++            raise ValueError("gt_stage: the skip key table must be the residency g2e when one is given")
++        if int(kbase) < 0 or int(aud) < 0:
++            raise ValueError(f"gt_stage: skip kbase {kbase} / audit {aud} must be >= 0")
++        ecount = ecnt is not None and groups.numel() <= (count_ids() if count_ids_max is None
++                                                         else int(count_ids_max))
++        gt_stage_skip_kernel[(C, npg)](groups, groups.numel(), int(H), src_tab, dtab, cnt if count else groups,
++                                       W1, W2, kg2e, ecnt if ecount else kg2e, tag, int(kbase), ctl, stat,
++                                       SCAN_BLOCK, bw, npg, count, ecount, int(aud),
++                                       num_warps=int(num_warps or WARPS_DEFAULT))
++        return C, npg
+     if ecnt is not None:
+         for t, what in ((g2e, "g2e"), (ecnt, "ecnt")):
+             if t.dtype != torch.int32 or t.dim() != 1 or not t.is_contiguous():

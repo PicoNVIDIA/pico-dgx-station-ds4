@@ -1,0 +1,1276 @@
+--- a/tree/fastpath/fastpath_a12_memory_guard.py	2026-11-18 23:55:02
++++ b/tree/fastpath/fastpath_a12_memory_guard.py	2026-11-19 00:34:50
+@@ -35,21 +35,28 @@
+ def retirement_facts(runner, member):
+     """Check a12_retire's state() against the worker's final graph managers."""
+     facts = member.state()
++    # K7 (fastpath_gracetier's packed scale banks): only a boot that declares the audit may keep dense twins of a
++    # few packed layers and run MegaMoE on both forms. Without packed layers every value below is what it was.
++    k7 = facts.get('k7') or {}
++    audit = list(k7.get('audit_layers', ()))
++    if audit and os.environ.get('GRACETIER_SF_PACK_AUDIT', '') in ('', '0'):
++        raise Refused('a12_retire reports dense twins of packed scale banks, but GRACETIER_SF_PACK_AUDIT is not set')
++    diagnostic = sum(r.get('k7', {}).get('diagnostic_bytes', 0) for r in facts.get('rows', []))
+     if (facts.get('install_form') != 'replace'
+             or facts.get('alternate_graphs_retained') != 0
+-            or facts.get('runtime_selector') is not False
+-            or facts.get('diagnostic_banks_bytes') != 0
++            or facts.get('runtime_selector') is not bool(audit)
++            or facts.get('diagnostic_banks_bytes') != diagnostic
+             or facts.get('fallback') is not False):
+         raise Refused('a12_retire must own one graph set with no selector, fallback or extra banks')
+     rows = facts.get('rows', [])
+     n_layers = member.TARGET_LAYERS + member.DRAFT_LAYERS
+     if (facts.get('layers') != list(range(n_layers))
+             or sorted(r.get('layer', -1) for r in rows) != list(range(n_layers))
+-            or facts.get('original_banks_retained') != 0):
++            or facts.get('original_banks_retained') != len(audit)):
+         raise Refused(f'a12_retire must retire all {n_layers} original scale-factor banks')
+     for row in rows:
+         if (row.get('status') != 'RETIRED'
+-                or row.get('original_storage_gone') != [True, True]
++                or row.get('original_storage_gone') != ([False, False] if row.get('layer') in audit else [True, True])
+                 or row.get('weights_unchanged') is not True
+                 or row.get('granted') != [1, 1]
+                 or row.get('original_graphs_captured') != 0
+--- a/tree/fastpath/fastpath_a12_retire.py	2026-11-18 23:55:02
++++ b/tree/fastpath/fastpath_a12_retire.py	2026-11-19 00:34:37
+@@ -128,6 +128,31 @@
+             torch.UntypedStorage._free_weak_ref(handle)
+ 
+ 
++def _k7_row(experts, layer, e):
++    """K7 (fastpath_gracetier, GRACETIER_SF_PACK=a2b6 / a2b4): gracetier built this layer's two banks packed, each
++    in its own generic-compression allocation (native_scales.Storage), and no dense 384-group bank of the layer was
++    ever on the device -- except in a declared audit layer, whose dense twins are reported as diagnostic banks.
++    Nothing is copied or released here; the row records what exists. original_logical_bytes is the dense form's
++    size, so the receipt shows the saving; k7.hot_source_gone is gracetier's own measurement of whether vLLM's hot
++    dense scales were released."""
++    k7 = experts._k7_sf
++    owners = tuple(k7['owners'])
++    if len(owners) != 2 or any(o.granted != 1 for o in owners):
++        raise RuntimeError('a12_retire: packed scale banks are not two granted compressible allocations')
++    experts._a12_retire_owners = owners
++    dense = [e * n * q * 4 for n, q in (L1_SHAPE, L2_SHAPE)]
++    kept = k7.get('dense') is not None
++    specs = [dict(shape=[e, n, q], stride=[n * q, 1, n], logical_bytes=b, storage_bytes=0)
++             for (n, q), b in zip((L1_SHAPE, L2_SHAPE), dense)]
++    return dict(layer=layer, experts=e, original_specs=specs, original_logical_bytes=sum(dense),
++                candidate_logical_bytes=sum(o.nbytes for o in owners),
++                candidate_allocated_bytes=sum(o.size for o in owners),
++                granted=[o.granted for o in owners], weights_unchanged=True,
++                original_graphs_captured=0, fallback=False, original_storage_gone=[not kept, not kept],
++                k7=dict(bits=k7['bits'], order=k7['order'], hot_source_gone=list(k7.get('hot_gone') or []),
++                        diagnostic_bytes=sum(dense) if kept else 0))
++
++
+ def replace_finalized(experts):
+     import torch
+     layer, e = layer_id(experts)
+@@ -142,10 +167,13 @@
+     device = experts._transformed_l1_weights[1].device
+     before = dict(device_free_bytes=torch.cuda.mem_get_info(device)[0],
+                   torch_reserved_bytes=torch.cuda.memory_reserved(device))
+-    handles, row = _replace(experts, layer, e)
+-    torch.cuda.synchronize(device)
+-    gc.collect()
+-    row['original_storage_gone'] = assert_retired(handles)
++    if getattr(experts, '_k7_sf', None) is not None:    # K7: built packed by gracetier; nothing to copy or release
++        row = _k7_row(experts, layer, e)
++    else:
++        handles, row = _replace(experts, layer, e)
++        torch.cuda.synchronize(device)
++        gc.collect()
++        row['original_storage_gone'] = assert_retired(handles)
+     # Return the released allocator segments before KV profiling, capture and the memory guard.
+     torch.cuda.empty_cache()
+     row.update(status='RETIRED', before=before,
+@@ -155,11 +183,22 @@
+ 
+ 
+ def state():
+-    return dict(install_form='replace', original_banks_retained=TARGET_LAYERS + DRAFT_LAYERS - len(ROWS),
+-                alternate_graphs_retained=0, runtime_selector=False, diagnostic_banks_bytes=0, fallback=False,
+-                candidate_allocated_bytes=sum(r['candidate_allocated_bytes'] for r in ROWS.values()),
+-                original_logical_bytes=sum(r['original_logical_bytes'] for r in ROWS.values()),
+-                layers=sorted(ROWS), rows=list(ROWS.values()), managers=MANAGERS)
++    s = dict(install_form='replace', original_banks_retained=TARGET_LAYERS + DRAFT_LAYERS - len(ROWS),
++             alternate_graphs_retained=0, runtime_selector=False, diagnostic_banks_bytes=0, fallback=False,
++             candidate_allocated_bytes=sum(r['candidate_allocated_bytes'] for r in ROWS.values()),
++             original_logical_bytes=sum(r['original_logical_bytes'] for r in ROWS.values()),
++             layers=sorted(ROWS), rows=list(ROWS.values()), managers=MANAGERS)
++    k7 = {l: r['k7'] for l, r in ROWS.items() if 'k7' in r}
++    if k7:  # K7 packed layers only: a boot without them gets the receipts it always got
++        audit = sorted(l for l, v in k7.items() if v['diagnostic_bytes'])
++        s['k7'] = dict(packed_layers=sorted(k7), bits=sorted({v['bits'] for v in k7.values()}), audit_layers=audit,
++                       hot_source_gone=sum(1 for v in k7.values()
++                                           if v['hot_source_gone'] and all(v['hot_source_gone'])))
++        # an audit layer keeps its dense twins beside the packed banks, and its MegaMoE is run on both
++        s['diagnostic_banks_bytes'] = sum(v['diagnostic_bytes'] for v in k7.values())
++        s['original_banks_retained'] += len(audit)
++        s['runtime_selector'] = bool(audit)
++    return s
+ 
+ 
+ def _summary():
+@@ -195,7 +234,8 @@
+         expected = list(range(TARGET_LAYERS + DRAFT_LAYERS))
+         if sorted(ROWS) != expected:
+             raise RuntimeError(f'a12_retire: retired layers {sorted(ROWS)}; expected all of {expected}')
+-        if any(not all(r['original_storage_gone']) for r in ROWS.values()):
++        if any(not all(r['original_storage_gone']) for r in ROWS.values()
++               if not r.get('k7', {}).get('diagnostic_bytes')):     # (a K7 audit layer keeps its dense twins)
+             raise RuntimeError('a12_retire: original scale-factor storage was not released')
+         write_receipt('POST_LOAD', status='PASS', **_summary())
+         activate('a12_retire')
+--- a/tree/fastpath/fastpath_gracetier.py	2026-11-18 23:55:02
++++ b/tree/fastpath/fastpath_gracetier.py	2026-11-19 01:06:54
+@@ -151,6 +151,18 @@
+ SKIP_LOG_TICKS = 64            # one server-log line per this many reads (and for each of the first four)
+ SKIP_STAT = 4                  # device counters per layer: copies done, copies skipped, skips audited, bad words
+ MAX_LANES = 64
++# K7 packed scale banks (research/K7-impl.md). All unset: no extra import, tensor, kernel or launch.
++SF_PACK_ENV = os.environ.get("GRACETIER_SF_PACK", "")               # a2b6 / a2b4: packed banks; kernel-b6 /
++#                                                                     kernel-b4: only the kernel variant; probe
++SF_PACK_ORDER_ENV = os.environ.get("GRACETIER_SF_PACK_ORDER", "")   # lo (default) / hi: first code of a group in
++#                                                                     the low / high bits (decided at pack time)
++SF_PACK_AUDIT_ENV = os.environ.get("GRACETIER_SF_PACK_AUDIT", "")   # "0,19,39": these layers keep a dense bank and
++#                                                                     every MegaMoE of them also runs dense
++SFP_MODES = {"a2b6": ("a2", "b6"), "a2b4": ("a2", "b4"), "kernel-b6": ("kernel", "b6"), "kernel-b4": ("kernel", "b4")}
++SFP_TICK = 64                  # steps between two reads of the K7 error word (and the audit counters)
++SFP_LOG_TICKS = 64             # one server-log line per this many reads (and for each of the first four)
++SFP_STAT = 5                   # audit counters: calls, calls with T > 16, words compared, differing, control differing
++SFP_AUDIT_MAX = 8              # layers that may keep a dense bank (405 MiB each)
+ _UNSET = object()
+ 
+ 
+@@ -209,6 +221,41 @@
+     return tot
+ 
+ 
++def sfpack_config(value=None, order=None, audit=None) -> tuple:
++    """K7: (mode, format, order, audit layers) from GRACETIER_SF_PACK / _ORDER / _AUDIT. mode "" = off (unset, empty
++    or 0: the engine as it was), "probe" = phase 0, "a2" = packed banks (a2b6: 6 bits a code, what the PTX manual's
++    decompressing copy supports; a2b4: 4 bits, usable only if experiment E2 shows the copy zero-extends a nibble),
++    "kernel" = the kernel variant alone with dense banks (kernel-b6 / kernel-b4: the control of the kernel edits).
++    A value that is not clean raises: a typo must not mean off."""
++    v = SF_PACK_ENV if value is None else str(value)
++    o = SF_PACK_ORDER_ENV if order is None else str(order)
++    a = SF_PACK_AUDIT_ENV if audit is None else str(audit)
++    if v in ("", "0", "probe"):
++        if o or a not in ("", "0"):
++            raise RuntimeError("gracetier: GRACETIER_SF_PACK_ORDER / _AUDIT are set but GRACETIER_SF_PACK is not a2b6 "
++                               "or a2b4")
++        return ("probe" if v == "probe" else ""), None, None, ()
++    if v not in SFP_MODES:
++        raise RuntimeError(f"gracetier: GRACETIER_SF_PACK={v!r} must be one of {sorted(SFP_MODES)}, probe, 0 or "
++                           f"unset (there is no bare a2: say a2b6 or a2b4)")
++    mode, fmt = SFP_MODES[v]
++    if o not in ("", "lo", "hi"):
++        raise RuntimeError(f"gracetier: GRACETIER_SF_PACK_ORDER={o!r} must be lo, hi or unset")
++    layers = ()
++    if a not in ("", "0"):
++        parts = a.split(",")
++        if mode != "a2" or not all(p.isdigit() for p in parts):
++            raise RuntimeError(f"gracetier: GRACETIER_SF_PACK_AUDIT={a!r} must be a comma list of layer numbers, "
++                               f"with GRACETIER_SF_PACK=a2b6 or a2b4")
++        layers = tuple(sorted({int(p) for p in parts}))
++        if len(layers) > SFP_AUDIT_MAX:
++            raise RuntimeError(f"gracetier: GRACETIER_SF_PACK_AUDIT names {len(layers)} layers; at most "
++                               f"{SFP_AUDIT_MAX} may keep a dense bank")
++    if mode == "kernel" and o:
++        raise RuntimeError("gracetier: GRACETIER_SF_PACK_ORDER has no meaning with kernel-b6 / kernel-b4")
++    return mode, fmt, o or "lo", layers
++
++
+ def load_allres(path: str, n_experts: int = E) -> dict:
+     """{layer: {"hot", "cold", "row"}} from make_rowmap_allres.py's JSON; raises unless every layer's hot / cold is a
+     partition of 0..E-1 and row is the all-resident map of it (every entry >= 0, hot -> 0..H-1, cold -> H..E-1)."""
+@@ -418,6 +465,20 @@
+         self.skip_steps: Any = 0
+         self.skip_swaps: Any = 0         # tag rows forgotten because the residency manager swapped the slot
+         self.skip_off_why: Any = None    # set when the skip was turned off on the device after boot
++        # K7 packed scale banks (all unused when GRACETIER_SF_PACK is unset)
++        self.sfp_cfg: Any = None         # (mode, format, order, audit layers), checked at boot
++        self.sfp: Any = {}               # layer -> {"banks": (PackedBank L1, L2), "owners", "dense", "hot_gone"}
++        self.sfp_dummy: Any = None       # the one dense-shaped pair every packed layer hands to DeepGEMM's host side
++        self.sfp_desc: Any = None        # uint8 [L, 2, 128] device: every layer's two tensor maps
++        self.sfp_word: Any = None        # int64 [1] view of the SymmBuffer's K7 word (gt_stage stores it per call)
++        self.sfp_ctl: Any = None         # int32 [4] view beside it: magic, the kernel's sticky error word
++        self.sfp_stat: Any = None        # audit: int64 [SFP_STAT] device counters
++        self.sfp_audit: Any = {}         # audit: data_ptr of a layer's L1 weights -> (layer, dense L1, L2, table addr)
++        self.sfp_orig: Any = None        # audit: DeepGEMM's own fp8_fp4_mega_moe
++        self.sfp_steps: Any = 0
++        self.sfp_err: Any = 0            # the kernel's error word at the last read
++        self.k7_modules: Any = {}        # probe: layer -> its experts module (the banks are read from it at load end)
++        self.k7_stats: Any = None        # probe: the counters (runtime/gracetier_sfpack.new_stats + layers, seconds)
+ 
+ 
+ _S = _State()
+@@ -459,6 +520,34 @@
+     return _S.skip_cfg
+ 
+ 
++def _sfp() -> tuple:
++    """K7: the cached (mode, format, order, audit layers), checked at first use (boot)."""
++    if _S.sfp_cfg is None:
++        cfg = sfpack_config()
++        if cfg[0] in ("a2", "kernel"):
++            bad = [l for l in cfg[3] if l not in _allres()]
++            if bad:
++                raise RuntimeError(f"gracetier: GRACETIER_SF_PACK_AUDIT names layers {bad}; the rowmap has "
++                                   f"{sorted(_S.allres)}")
++            k = getattr(sys.modules.get("fastpath_megamoe"), "K7", None)
++            if not k or k.get("fmt") != cfg[1]:     # fail in the first seconds of the boot, not after the load
++                raise RuntimeError(f"gracetier: GRACETIER_SF_PACK wants the {cfg[1]} kernel variant, but the "
++                                   f"megamoe component has {k!r} (the kernel-side patch 0003 is not applied, or "
++                                   f"fastpath_megamoe is not imported). Refusing.")
++            _log(f"K7 packed scales: mode {cfg[0]}, format {cfg[1]}, order {cfg[2]}, audit layers "
++                 f"{list(cfg[3]) or 'none'}")
++        _S.sfp_cfg = cfg
++    return _S.sfp_cfg
++
++
++def _sfp_rt():
++    """The K7 runtime module (runtime/gracetier_sfpack.py), imported only when a K7 mode is on."""
++    _rt()
++    from runtime import gracetier_sfpack as SP
++
++    return SP
++
++
+ def _rt():
+     """Our runtime package from RT_DIR (gracetier_*, dg_mega, dg_moe, host_tier, ckpt; no vllm). With residency on
+     also gracetier_res + residency_policy (the card copies them only for that mode)."""
+@@ -818,8 +907,292 @@
+     if killed:
+         _log(f"K6 stage skip ERROR: {_S.skip_off_why}. The skip is now OFF on the device (every copy is done). "
+              f"Output produced before this line is suspect.")
++
++
++# ================================================================================================ K7 packed scales
++def _sfp_storage(nbytes: int, dev) -> tuple:
++    """(raw uint8 [nbytes] device tensor, owner): one generic-compression allocation, the kind a12_retire puts each
++    dense bank in (native_scales.Storage: cuMemCreate with CU_MEM_ALLOCATION_COMP_GENERIC, refused unless granted).
++    The owner must outlive every graph that reads the tensor; it is kept on the module."""
++    import torch
++
++    from native_scales import Storage
++
++    own = Storage(int(nbytes), True, dev.index)
++    try:
++        raw = torch.as_tensor(own, device=dev)
++        if own.granted != 1 or raw.data_ptr() != int(own.pointer) or raw.numel() != int(nbytes):
++            raise RuntimeError(f"gracetier K7: compressible allocation of {nbytes} B: granted {own.granted}, view "
++                               f"{raw.data_ptr():#x} [{raw.numel()}] vs {int(own.pointer):#x}")
++    except BaseException:
++        own.close()
++        raise
++    return raw, own
++
++
++def _sfp_dummy(dev) -> tuple:
++    """The one dense-shaped (E, n, q) int32 pair that every packed layer passes to DeepGEMM's host side as its scale
++    tensors (runtime/gracetier_sfpack.dummy_dense): an address range, 2 MiB of real memory behind all of it."""
++    if _S.sfp_dummy is None:
++        R, SP = _rt(), _sfp_rt()
++        arena = _vmm(dev)[0]
++        shapes = ((2 * INTER, HIDDEN // (4 * SF_BLOCK)), (HIDDEN, INTER // (4 * SF_BLOCK)))
++        _S.sfp_dummy = SP.dummy_dense(arena, R.GV, E, shapes, dev)
++        maps = sum(SP.alias_ops(E * n * q * 4, arena.gran) for n, q in shapes)
++        _log(f"K7 dense-shaped scale tensors for DeepGEMM's host side: {[tuple(t.shape) for t in _S.sfp_dummy]} "
++             f"int32 over {maps} mappings of one {arena.gran} B allocation filled with 0xFF (never read by the K7 "
++             f"kernel; a stray dense read gives NaN scales)")
++    return _S.sfp_dummy
++
++
++def _sfp_banks(module, st, dev, sf1, csf1, sf2, csf2) -> tuple:
++    """K7 (a2), in place of the two _sf_bank calls: this layer's scale banks built PACKED, each in its own
++    compressible allocation -- groups 0..H-1 from vLLM's hot scales (packed on the device), H..E-1 from ours (packed
++    on the CPU, then copied). No dense 384-group bank is built (an audit layer builds one too and keeps it). Every
++    code is range-checked and the whole bank is unpacked and compared with its sources; a difference refuses the
++    boot. Returns (dummy L1, dummy L2, group 0 of L1 unpacked, group 0 of L2 unpacked): what MegaMoE's host side
++    gets, and what the slot-0 parity check compares."""
++    import torch
++
++    SP = _sfp_rt()
++    _, fmt, order, audit = _sfp()
++    I, D, H, C = INTER, HIDDEN, st.H, st.C
++    keep = st.idx in audit
++    banks, owners, dense, par = [], [], [], []
++    for hot, cold, n, q, what in ((sf1, csf1, 2 * I, D // (4 * SF_BLOCK), "L1"),
++                                  (sf2, csf2, D, I // (4 * SF_BLOCK), "L2")):
++        if tuple(hot.shape) != (H, n, q) or hot.dtype != torch.int32 or tuple(cold.shape) != (C, n, q) \
++                or cold.dtype != torch.int32:
++            raise RuntimeError(f"gracetier layer {st.idx}: {what} SF is {tuple(hot.shape)} {hot.dtype} (vLLM) / "
++                               f"{tuple(cold.shape)} {cold.dtype} (cold), expected ({H} | {C}, {n}, {q}) int32")
++        raw, own = _sfp_storage(SP.packed_bytes(E, n, q, fmt), dev)
++        owners.append(own)
++        pk = SP.PackedBank(raw, E, n, q, fmt, order)
++        hc, cc = SP.col_bytes(hot), SP.col_bytes(cold)
++        bad = pk.write_dense(0, hc) + pk.write_dense(H, cc)
++        raw.bitwise_xor_(0)             # SM stores into the compressible allocation (native_scales.py:69-71)
++        diff = pk.mismatch(0, hc) + pk.mismatch(H, cc)
++        if bad or diff:
++            raise RuntimeError(f"gracetier layer {st.idx}: {what} scales cannot be stored {fmt}: {bad} code(s) "
++                               f"outside {pk.fmt.lo}..{pk.fmt.hi}, {diff} byte(s) differ after pack + unpack. "
++                               f"Refusing.")
++        banks.append(pk)
++        par.append(pk.dense(0, 1))
++        if keep:
++            dense.append(_sf_bank(dev, hot, cold, n, q, H, C, what))
++        del hc, cc
++    info = {"st": st, "banks": tuple(banks), "owners": tuple(owners), "dense": tuple(dense) if keep else None,
++            "bits": banks[0].fmt.bits, "order": order, "hot_gone": None,
++            "handles": [t.untyped_storage()._weak_ref() for t in (sf1, sf2)]}
++    _S.sfp[st.idx] = info
++    module._k7_sf = info                # a12_retire and the residency wiring read it; the owners live with the module
++    d1, d2 = _sfp_dummy(dev)
++    return d1, d2, par[0], par[1]
++
++
++def _sfp_hot_gone(idx: int) -> None:
++    """After finalize dropped vLLM's hot scale tensors: are their storages released? (Recorded for a12_retire's row
++    and the ARMED line; today nothing checks it. A live one means 318 MiB a layer that the arithmetic counts free.)"""
++    import torch
++
++    info = _S.sfp[idx]
++    hs = info.pop("handles")
++    try:
++        info["hot_gone"] = [bool(torch.UntypedStorage._expired(h)) for h in hs]
++    finally:
++        for h in hs:
++            torch.UntypedStorage._free_weak_ref(h)
++
++
++def _sfp_finalize(module, st, dev) -> None:
++    """K7 (a2), after _skip_finalize and before _prewarm: the layer's two tensor maps into the device table, and the
++    word gt_stage stores per call (st.skw["sfp"]: the SymmBuffer's K7 word, this layer's table address). All at
++    addresses fixed from here on."""
++    import torch
++
++    SP, GS = _sfp_rt(), _rt().GS
++    if "skip" not in st.skw:
++        raise RuntimeError("gracetier: GRACETIER_SF_PACK=a2b6 / a2b4 needs GRACETIER_STAGE_SKIP=1 with one hot "
++                           "count for all layers: the per-call scale word rides in the skip kernel's launch")
++    if not hasattr(GS, "gt_stage_sfp_kernel"):
++        raise RuntimeError("gracetier: GRACETIER_SF_PACK is on but runtime/gracetier_stage.py has no gt_stage_sfp_"
++                           "kernel (an old copy in gracetier_rt/)")
++    if _S.sfp_word is None:
++        word, ctl = SP.k7_views(_symm_for(module).buffer)
++        if str((_S.symm_desc or {}).get("how", "")).startswith("vLLM's own"):
++            # gt_stage stores the word before every MegaMoE of a gracetier layer and nothing clears it: a layer
++            # that shares the buffer without a gt_stage (none today: the buffer is ours, made for G = 384) would
++            # read the previous layer's packed scales
++            raise RuntimeError("gracetier: the K7 word would live in a SymmBuffer that vLLM also hands to layers "
++                               "gracetier does not stage. Refusing.")
++        if int(word[0]) != 0 or any(ctl.tolist()):
++            raise RuntimeError("gracetier: the SymmBuffer's K7 control word is not zero before it is armed. Refusing.")
++        desc = torch.zeros(max(_S.allres) + 1, 2, SP.TMAP_BYTES, dtype=torch.uint8, device=dev)
++        if desc.data_ptr() % 64:
++            raise RuntimeError(f"gracetier K7: the tensor-map table at {desc.data_ptr():#x} is not 64-B aligned")
++        ctl[0:1].fill_(SP.K7_MAGIC)
++        _S.sfp_word, _S.sfp_ctl, _S.sfp_desc = word, ctl, desc
++    info = _S.sfp[st.idx]
++    for k, pk in enumerate(info["banks"]):
++        tm = SP.encode_tma(SP.tma_args(pk))
++        _S.sfp_desc[st.idx, k].copy_(torch.frombuffer(bytearray(tm), dtype=torch.uint8))
++    info["w1_ptr"] = int(module._transformed_l1_weights[0].data_ptr())
++    st.skw = dict(st.skw, sfp=(_S.sfp_word, int(_S.sfp_desc.data_ptr()) + st.idx * 2 * SP.TMAP_BYTES))
+ 
+ 
++def _sfp_audit_call(a, y, l1, l2, symm, args, kwargs) -> None:
++    """K7 audit, right after the MegaMoE call of an audit layer: three more runs of the same call on the same
++    SymmBuffer state -- K7 word 0 and the layer's dense banks (twice), then the word back and the packed banks -- and,
++    on the device, the count of 16-bit words in which the packed result differs from the dense one, and in which
++    the two dense results differ from each other (the control: the reference must repeat itself). The call's own y
++    is NOT compared: when the router asked for the combine in the seam (megamoe fork: C11 skip_combine, cleared by
++    the kernel at its end) the kernel does not write y at all; the three re-runs find the flag cleared and combine
++    themselves. The packed run is last, so the slots the seam reads and the K7 word are left as the call left
++    them. No host read; capturable."""
++    import torch
++
++    _, d1, d2, addr = a
++    st = _S.sfp_stat
++    y1, y2, y3 = torch.empty_like(y), torch.empty_like(y), torch.empty_like(y)
++    _S.sfp_word.zero_()
++    _S.sfp_orig(y2, (l1[0], d1), (l2[0], d2), symm, *args, **kwargs)
++    _S.sfp_word.zero_()             # (also: no MegaMoE launch has another MegaMoE as its predecessor on the stream)
++    _S.sfp_orig(y3, (l1[0], d1), (l2[0], d2), symm, *args, **kwargs)
++    _S.sfp_word.fill_(addr)
++    _S.sfp_orig(y1, l1, l2, symm, *args, **kwargs)
++    w1, w2, w3 = (t.contiguous().view(torch.int16) for t in (y1, y2, y3))
++    st[0:1].add_(1)
++    if y.shape[0] > 16:
++        st[1:2].add_(1)
++    st[2:3].add_(w1.numel())
++    st[3:4].add_((w1 != w2).sum())
++    st[4:5].add_((w2 != w3).sum())
++
++
++def _sfp_audit_install(dev) -> None:
++    """K7 audit: wrap DeepGEMM's fp8_fp4_mega_moe (the module attribute the boundary calls, fastpath_boundary.py:512)
++    so that a call whose L1 weights are an audit layer's is followed by _sfp_audit_call. Other calls pass through."""
++    import torch
++
++    dgm = sys.modules.get("vllm.utils.deep_gemm")
++    dg = dgm._import_deep_gemm() if dgm is not None else None
++    if dg is None or not hasattr(dg, "fp8_fp4_mega_moe"):
++        raise RuntimeError("gracetier: GRACETIER_SF_PACK_AUDIT needs DeepGEMM's fp8_fp4_mega_moe; it is not loaded")
++    if getattr(dg.fp8_fp4_mega_moe, "_ds41_k7", False):
++        return
++    _S.sfp_orig = dg.fp8_fp4_mega_moe
++    _S.sfp_stat = torch.zeros(SFP_STAT, dtype=torch.int64, device=dev)
++    for idx, info in _S.sfp.items():
++        if info["dense"] is not None:
++            _S.sfp_audit[info["w1_ptr"]] = (idx, info["dense"][0], info["dense"][1], info["st"].skw["sfp"][1])
++
++    def fp8_fp4_mega_moe(y, l1_weights, l2_weights, sym_buffer, *args, **kwargs):
++        _S.sfp_orig(y, l1_weights, l2_weights, sym_buffer, *args, **kwargs)
++        a = _S.sfp_audit.get(int(l1_weights[0].data_ptr()))
++        if a is not None:
++            _sfp_audit_call(a, y, l1_weights, l2_weights, sym_buffer, args, kwargs)
++
++    fp8_fp4_mega_moe._ds41_k7 = True
++    dg.fp8_fp4_mega_moe = fp8_fp4_mega_moe
++
++
++def _sfp_ready(want) -> None:
++    """K7, after load_model: the kernel variant is the one built for this format, every layer is packed and passes
++    the scale word to gt_stage, the audit is wired. A gap raises: a dense kernel on packed banks reads NaN scales."""
++    mode, fmt, order, audit = _sfp()
++    mm = sys.modules.get("fastpath_megamoe")
++    k = getattr(mm, "K7", None)
++    if mm is None or not getattr(mm, "ACTIVE", False) or not k or k.get("fmt") != fmt:
++        raise RuntimeError(f"gracetier: GRACETIER_SF_PACK wants the {fmt} kernel variant, but the megamoe component "
++                           f"is {'not armed' if mm is None or not getattr(mm, 'ACTIVE', False) else f'built as {k}'} "
++                           f"(patch 0003 missing, or megamoe not in DS41_FASTPATH). Refusing.")
++    if mode == "kernel":
++        _log(f"K7 kernel variant {k} is live; the scale banks are dense and no SymmBuffer's K7 word is ever set, so "
++             f"every call takes the kernel's stock path")
++        return
++    R, SP = _rt(), _sfp_rt()
++    if set(_S.sfp) != set(want) or _S.sfp_word is None:
++        raise RuntimeError(f"gracetier: GRACETIER_SF_PACK packed layers {sorted(_S.sfp)}; expected all of "
++                           f"{sorted(want)}")
++    if any("sfp" not in i["st"].skw or "w1_ptr" not in i for i in _S.sfp.values()):
++        raise RuntimeError("gracetier: a packed layer does not pass the K7 scale word to gt_stage. Refusing.")
++    dev = _S.sfp_desc.device
++    if audit:
++        _sfp_audit_install(dev)
++    packed = sum(o.size for i in _S.sfp.values() for o in i["owners"])
++    dense_eq = sum(pk.dense_nbytes for i in _S.sfp.values() for pk in i["banks"])
++    kept = sum(b.numel() * 4 for i in _S.sfp.values() for b in (i["dense"] or ()))
++    gone = sum(1 for i in _S.sfp.values() if i["hot_gone"] and all(i["hot_gone"]))
++    per_hot = len(want) * (R.GV.l1_group_bytes(HIDDEN, INTER) + R.GV.l2_group_bytes(HIDDEN, INTER))
++    f = SP.fmt_of(fmt)
++    _log(f"K7 packed scales ARMED: {len(_S.sfp)} layers, {f.bits} bits a code (bias {f.bias}, order {order}), "
++         f"{packed / GiB:.3f} GiB allocated for {dense_eq / GiB:.3f} GiB of dense scales = {(dense_eq - packed) / GiB:.3f}"
++         f" GiB less, worth {(dense_eq - packed) / per_hot:.1f} hot experts per layer at {per_hot / GiB:.3f} GiB "
++         f"each; kernel variant {k}; vLLM's hot dense scales released in {gone}/{len(_S.sfp)} layers; audit layers "
++         f"{list(audit) or 'none'}" + (f" keep {kept / GiB:.3f} GiB of dense banks and run MegaMoE three more "
++                                       f"times a call (no speed is read from this boot)" if audit else "")
++         + f"; error word and counters every {SFP_TICK} steps")
++
++
++def _sfp_tick(m) -> None:
++    """K7, between two steps (execute_model entry): every SFP_TICK steps one blocking read of the kernel's sticky
++    error word (4 int32) and, in an audit boot, of the 5 audit counters; one record to the residency telemetry file
++    and, less often, one server-log line. The error cannot be undone from here: it is logged, loudly."""
++    import torch
++
++    if torch.cuda.is_current_stream_capturing():
++        return
++    _S.sfp_steps += 1
++    if _S.sfp_steps % SFP_TICK:
++        return
++    err = int(_S.sfp_ctl.detach().cpu().tolist()[1]) & 0xFFFFFFFF
++    st = _S.sfp_stat.detach().cpu().tolist() if _S.sfp_stat is not None else None
++    new_err, _S.sfp_err = err != _S.sfp_err, err
++    n = _S.sfp_steps // SFP_TICK
++    rec = {"event": "sf_pack", "host_steps": _S.sfp_steps, "format": _sfp()[1], "kernel_err": err}
++    if st is not None:
++        rec.update({"audit_calls": st[0], "audit_calls_gt16": st[1], "words": st[2], "mismatch_words": st[3],
++                    "control_words": st[4]})
++    emit = getattr(m, "_emit", None)
++    if emit is not None:
++        emit(rec)
++    if new_err or n <= 4 or n % SFP_LOG_TICKS == 0:
++        aud = "" if st is None else (f" audit calls {st[0]} (T > 16: {st[1]}) words {st[2]} mismatch_words {st[3]} "
++                                     f"control_words {st[4]}")
++        _log(f"K7 packed scales: steps {_S.sfp_steps} kernel_err {err}{aud}")
++    if new_err:
++        _log(f"K7 packed scales ERROR: the expert kernel set its error word to {err} (bit 0: an activation scale "
++             f"code above 254 - bias, so a biased code reached the NaN code or carried; bit 1: a packed call reached "
++             f"a kernel instance that cannot take it). Output produced since the last read is wrong. Remove "
++             f"GRACETIER_SF_PACK.")
++
++
++def _sfpack_probe() -> dict:
++    """K7 phase 0 (GRACETIER_SF_PACK=probe), once, after load_model: every target layer's two scale banks -- the
++    tensors MegaMoE reads from here on (module._transformed_l{1,2}_weights[1]: a12_retire's copies when it is armed,
++    with any boot-time residency state) -- are packed to 4 bits on their device, unpacked and compared byte for byte
++    with the bank (runtime/gracetier_sfpack.probe_bank). Reads only; nothing the step reads is replaced, the
++    temporaries are freed, no launch is added to a step. One log line; the counters stay in _S.k7_stats."""
++    import torch
++
++    SP = _sfp_rt()
++    t0 = time.time()
++    tot = SP.new_stats()
++    cuda = False
++    for idx in sorted(_S.k7_modules):
++        module = _S.k7_modules[idx]
++        for bank in (module._transformed_l1_weights[1], module._transformed_l2_weights[1]):
++            SP.add_stats(tot, SP.probe_bank(bank))
++            cuda = cuda or bool(bank.is_cuda)
++    if cuda:
++        torch.cuda.synchronize()
++        torch.cuda.empty_cache()
++    dt = time.time() - t0
++    _S.k7_stats = dict(tot, layers=len(_S.k7_modules), seconds=round(dt, 2), lossless=SP.ok(tot))
++    _log(SP.summary_line(tot, len(_S.k7_modules), dt))
++    return _S.k7_stats
++
++
+ def _finalize_layer(module, st, dev, snap, why_no_snap) -> None:
+     import torch
+ 
+@@ -842,10 +1215,14 @@
+     w2 = va2.tensor(l2.dtype, (E, D, I // 2), dev)
+     w1[:H].copy_(l1)
+     w2[:H].copy_(l2)
+-    b1 = _sf_bank(dev, sf1, csf1, 2 * I, D // (4 * SF_BLOCK), H, C, "L1")
+-    b2 = _sf_bank(dev, sf2, csf2, D, I // (4 * SF_BLOCK), H, C, "L2")
++    if _sfp()[0] == "a2":           # K7: packed banks; b1 / b2 are the shared dense-shaped pair for the host side
++        b1, b2, q1, q2 = _sfp_banks(module, st, dev, sf1, csf1, sf2, csf2)
++    else:
++        b1 = _sf_bank(dev, sf1, csf1, 2 * I, D // (4 * SF_BLOCK), H, C, "L1")
++        b2 = _sf_bank(dev, sf2, csf2, D, I // (4 * SF_BLOCK), H, C, "L2")
++        q1, q2 = b1, b2
+     if snap is not None:
+-        par = _parity_slot0(st, snap, w1, b1, w2, b2)
++        par = _parity_slot0(st, snap, w1, q1, w2, q2)
+         _S.parity[st.idx] = par
+         if st.idx == min(_S.allres) or not par["ok"]:
+             _log(f"parity slot0 layer {st.idx} (our transform of the loader's raw hot slot 0 vs vLLM's finalized "
+@@ -857,7 +1234,11 @@
+         _log(f"parity slot0: not checked ({why_no_snap})")
+     module._transformed_l1_weights = (w1, b1)
+     module._transformed_l2_weights = (w2, b2)
+-    del l1, sf1, l2, sf2
++    del l1, sf1, l2, sf2, q1, q2
++    if _sfp()[0] == "a2":           # K7: record whether vLLM's hot dense scales are really gone now
++        _sfp_hot_gone(st.idx)
++    elif _sfp()[0] == "probe":      # K7 phase 0: the probe reads this layer's banks from the module at load end
++        _S.k7_modules[st.idx] = module
+     st.row_map = torch.tensor(st.row_allres, dtype=torch.int32, device="cpu").to(dev)
+     st.src_tab = _S.pool.src_table(st.idx, dev)
+     st.dtab = R.GS.make_dtab(w1, w2)
+@@ -868,6 +1249,8 @@
+         _res_finalize(st, dev)
+         _S.modules[st.idx] = module
+     _skip_finalize(st, dev)         # K6: after _res_finalize (it reads st.g2e), before _prewarm
++    if _sfp()[0] == "a2":           # K7: the layer's tensor maps and gt_stage's scale word, after the skip tables
++        _sfp_finalize(module, st, dev)
+     # [inferred] what the boundary's get_block_m_for_mega_moe (B/:1344) and vLLM's stock forward read for G
+     module.num_experts = E
+     module.num_local_experts = E
+@@ -937,6 +1320,9 @@
+ 
+ def _res_tensors(module) -> tuple:
+     (w1, sf1), (w2, sf2) = module._transformed_l1_weights, module._transformed_l2_weights
++    k7 = getattr(module, "_k7_sf", None)
++    if k7 is not None:              # K7: the banks the kernel reads are the packed ones (sf1 / sf2 above: the dummy)
++        sf1, sf2 = (pk.rows32 for pk in k7["banks"])
+     return w1, sf1, w2, sf2
+ 
+ 
+@@ -973,6 +1359,9 @@
+         else:
+             g1, g2 = _S.pool.host_l1(idx), _S.pool.host_l2(idx)
+         views[idx] = R.GR.LayerView(idx, st.H, st.row_map, st.g2e, w1, w2, sf1, sf2, g1, g2, cuts1=cuts1, cuts2=cuts2)
++        k7 = getattr(module, "_k7_sf", None)
++        if k7 is not None and k7["dense"] is not None:     # K7 audit: the dense twins move with the packed rows
++            views[idx].also_sf(*k7["dense"])
+         bound[idx] = tuple(t.data_ptr() for t in (w1, sf1, w2, sf2))
+         retired += int(hasattr(module, "_a12_retire_owners"))
+     _S.res_bound = bound
+@@ -1051,12 +1440,16 @@
+         if m is None:
+             if _S.skip_tags is not None:        # K6, residency off: only the counters
+                 _skip_tick(None)
++            if _S.sfp_word is not None:         # K7, residency off: the kernel's error word (and the audit counters)
++                _sfp_tick(None)
+             return orig(self, *args, **kwargs)
+         if not _S.res_rechecked:
+             _res_recheck()
+         m.barrier()
+         if _S.skip_tags is not None:            # K6: counters and the audit step number, after the barrier
+             _skip_tick(m)
++        if _S.sfp_word is not None:             # K7: the kernel's error word (and the audit counters)
++            _sfp_tick(m)
+         _S.res_in_exec = True
+         try:
+             return orig(self, *args, **kwargs)
+@@ -1166,6 +1559,7 @@
+         raise RuntimeError("gracetier and peer3 are exclusive: disarm peer3 (and coldskip)")
+     _allres()
+     _skip_cfg()                     # K6: a bad GRACETIER_STAGE_SKIP / _SCRATCH_LANES value raises here
++    _sfp()                          # K7: a bad GRACETIER_SF_PACK / _ORDER / _AUDIT value raises here
+     _S.hk = orig
+     _S.hk_forward = hook_forward
+     if isinstance(g.get("_PREFIX"), re.Pattern):
+@@ -1272,6 +1666,14 @@
+                  f"[{int(_S.skip_tags[0].numel())}] per lane all -1, audit {_skip_cfg()[2]}, swap hook "
+                  f"{'installed' if _S.res is not None else 'not needed (residency off)'}; counters every "
+                  f"{SKIP_TICK} steps")
++        if _sfp()[0] in ("a2", "kernel"):   # K7: the kernel variant is live, every layer packed, the audit wired
++            _sfp_ready(want)
++        elif _sfp()[0] == "probe":          # K7 phase 0: probe only; what the step reads does not change
++            if set(_S.k7_modules) != want:
++                raise RuntimeError(f"gracetier: GRACETIER_SF_PACK=probe saw layers {sorted(_S.k7_modules)} finalize; "
++                                   f"expected all of {sorted(want)}")
++            with bounded("gracetier K7 scale-pack probe", FINALIZE_S):
++                _sfpack_probe()
+         _hook_activate(NAME)
+         hs = sorted({len(v["hot"]) for v in _S.allres.values()})
+         _log(f"ENGAGED: {len(_S.layers_done)} layers, H {hs}, G = {E}, {_S.tensors_read} cold tensors in Grace "
+--- a/tree/fastpath/gracetier_rt/runtime/gracetier_res.py	2026-11-18 23:55:02
++++ b/tree/fastpath/gracetier_rt/runtime/gracetier_res.py	2026-11-19 00:30:36
+@@ -177,7 +177,14 @@
+ 
+ def _sf2d(bank: torch.Tensor, what: str) -> torch.Tensor:
+     """[G, n*q] int32 view of an MN-major SF bank (shape (G, n, q), strides (n*q, 1, n): a12_retire's layout,
+-    fastpath_a12_retire.py:71-77): row g = group g's n*q words, contiguous."""
++    fastpath_a12_retire.py:71-77): row g = group g's n*q words, contiguous.
++    K7: a 2-D int32 [G, words] tensor is a packed bank's rows (gracetier_sfpack.PackedBank.rows32) and is used as it
++    is: a swap exchanges rows, and a digest reads them as int64, whatever a row encodes."""
++    if bank.dim() == 2:
++        if bank.dtype != torch.int32 or not bank.is_contiguous() or bank.shape[1] % 2 or bank.storage_offset() % 2:
++            raise ValueError(f"{what}: packed SF rows are {tuple(bank.shape)} {bank.dtype}, expected contiguous "
++                             f"int32 [G, an even number of words]")
++        return bank
+     if bank.dtype != torch.int32 or bank.dim() != 3:
+         raise ValueError(f"{what}: SF bank is {tuple(bank.shape)} {bank.dtype}, expected int32 (G, n, q)")
+     G, n, q = bank.shape
+@@ -213,6 +220,7 @@
+         self.w = (_bytes2d(l1, f"{w} L1"), _bytes2d(l2, f"{w} L2"))
+         self.gr = (_bytes2d(grace1, f"{w} Grace L1"), _bytes2d(grace2, f"{w} Grace L2"))
+         self.sf = (_sf2d(sf1, f"{w} L1"), _sf2d(sf2, f"{w} L2"))
++        self.sf_also: Tuple[tuple, tuple] = ((), ())    # K7 audit: more banks whose rows move with sf (also_sf)
+         self.G, self.C = int(self.w[0].shape[0]), int(self.gr[0].shape[0])
+         self.B = (int(self.w[0].shape[1]), int(self.w[1].shape[1]))
+         self.cuts = (tuple(int(b) for b in cuts1), tuple(int(b) for b in cuts2))
+@@ -231,6 +239,15 @@
+ 
+     def pieces(self, k: int, g: int) -> List[Tuple[int, int]]:
+         return pieces(self.B[k], g, self.cuts[k])
++
++    def also_sf(self, sf1: torch.Tensor, sf2: torch.Tensor) -> None:
++        """K7 audit: a second pair of SF banks of this layer (the dense twins of packed banks). Every swap exchanges
++        their rows g and H + c with the same three kernels, so both forms keep naming the same expert per group."""
++        w = f"gracetier-res layer {self.idx}"
++        rows = (_sf2d(sf1, f"{w} L1 twin"), _sf2d(sf2, f"{w} L2 twin"))
++        if any(r.shape[0] != self.G for r in rows):
++            raise ValueError(f"{w}: SF twin banks have {[int(r.shape[0]) for r in rows]} groups, expected {self.G}")
++        self.sf_also = ((rows[0],), (rows[1],))
+ 
+ 
+ # ------------------------------------------------------------------------------------------------ the manager
+@@ -480,10 +497,11 @@
+                 w[g, off:off + n].copy_(gr[c, off:off + n], non_blocking=True)
+             for off, n in ps:                                               # 3. D2H  scratch H + c -> Grace c
+                 gr[c, off:off + n].copy_(w[s, off:off + n], non_blocking=True)
+-            a, b = v.sf[k][g], v.sf[k][s]                                   # 4. SF rows g <-> H + c (xor swap)
+-            a.bitwise_xor_(b)
+-            b.bitwise_xor_(a)
+-            a.bitwise_xor_(b)
++            for bank in (v.sf[k],) + v.sf_also[k]:                          # 4. SF rows g <-> H + c (xor swap)
++                a, b = bank[g], bank[s]                                     #    (K7 audit: the dense twin too)
++                a.bitwise_xor_(b)
++                b.bitwise_xor_(a)
++                a.bitwise_xor_(b)
+             self.stats["copies"] += 2 * len(ps) + len(pg)
+         v.row_map[e_in].fill_(g)                                            # 5. tables
+         v.row_map[e_out].fill_(s)
+--- /dev/null	2026-11-19 01:07:05
++++ b/tree/fastpath/gracetier_rt/runtime/gracetier_sfpack.py	2026-11-19 00:30:05
+@@ -0,0 +1,449 @@
++"""K7 (research/K7-packed-scales.md, research/K7-impl.md): MegaMoE e8m0 scale banks stored packed, 4 or 6 bits a code.
++
++A bank is what `module._transformed_l{1,2}_weights[1]` holds: int32 (G, n, q), MN-major (strides (n*q, 1, n)), so
++its storage order is [group][K word][row] with 4 e8m0 codes per int32 word (fastpath_a12_retire.py:31, 71-77;
++fastpath_gracetier.py sf_strides). Seen as bytes that is uint8 (G, q, 4n): one COLUMN per (group, K word), and every
++16 consecutive code bytes of a column are the 128-bit chunk the expert kernel copies to one tensor-memory lane.
++
++Packed form (variant a2: the kernel never rebuilds the dense byte, it reads `code - bias` and the activation scale
++codes carry `+ bias`): every 16 codes of a column become one GROUP of `group_bytes` bytes, in the same order, so a
++column is uint8 [4n * bits / 8] and a bank uint8 (G, q, 4n * bits / 8).
++
++  b4   4 bits a code, bias 112 (codes 112..127), 8 B a group. TMA type .b4x16_p64 / tcgen05.cp .b8x16.b4x16_p64.
++       NVIDIA's PTX manual (9.7.18.9.1.1, figure "Individual decompression from 4-bit to 8-bit", read 2026-11-19)
++       shows that copy placing the nibble in bits 5..2 of the byte, i.e. byte = nibble << 2. If the hardware does
++       that, b4 cannot be exact; it is kept because experiment E2 (the hardware) has the last word.
++  b6   6 bits a code, bias 64 (codes 64..127), 12 B a group. TMA type .b6x16_p32 / tcgen05.cp .b8x16.b6x16_p32;
++       the same manual shows the 6-bit value in bits 5..0 (zero-extended). This is the form the manual supports.
++
++Order inside a group ("lo" / "hi"): lo = the first code in the lowest bits (b4: code 2j in bits 0..3 of byte j; b6:
++codes 4j..4j+3 as one little-endian 24-bit word, code 4j in bits 0..5), which is what the manual's .b4x16_p64 figure
++draws (LSB first). hi = the first code in the highest bits (the unknown E2 settles; decided here, at pack time).
++
++Also here: the tensor-map arguments for a packed bank and their encoding through the driver, the SymmBuffer control
++word the kernel reads them through, the dense-shaped address range the host side of DeepGEMM is handed instead of a
++bank, and the phase 0 probe (GRACETIER_SF_PACK=probe). No vllm import; torch only.
++"""
++from __future__ import annotations
++
++import ctypes
++from dataclasses import dataclass
++from typing import Callable, Dict, Optional, Sequence, Tuple
++
++import torch
++
++HI = 0x70                       # the high nibble every b4-packable code has
++CHUNK_GROUPS = 32               # groups per pass of the checks (24 MiB of L1 scales)
++GiB = 1024 ** 3
++CODES = 16                      # codes per group = per 128-bit tensor-memory chunk
++TMAP_BYTES = 128                # sizeof(CUtensorMap)
++TMAP_BOX = (128, 4, 1)          # elements, groups-of-8 ("pieces"), columns: one 128-row block of one column
++# The SymmBuffer control word (megamoe fork: fold control block + 384 B, inside the 512-B tail of l2_empty_count that
++# the fork reserves; fastpath_megamoe.P3FOLD_CTL_OFFSET = 21009280, C11 at + 256).
++K7_OFFSET = 21009280 + 384
++K7_MAGIC = 0x374B5346
++K7_WORDS = 4                    # int32 [4] at K7_OFFSET + 8: magic, err (sticky, written by the kernel), 2 spare
++
++
++@dataclass(frozen=True)
++class Fmt:
++    name: str
++    bits: int
++    bias: int                   # packed value = code - bias; the activation scale codes carry + bias
++    group_bytes: int            # bytes of 16 packed codes in global memory
++    tma_type: str               # CUtensorMapDataType member
++    cp_fmt: str                 # tcgen05.cp qualifier of the decompressing copy
++
++    @property
++    def lo(self) -> int:
++        return self.bias
++
++    @property
++    def hi(self) -> int:
++        return self.bias + (1 << self.bits) - 1
++
++    @property
++    def act_max(self) -> int:
++        """The largest activation scale code that stays below the e8m0 NaN code after + bias."""
++        return 254 - self.bias
++
++
++FORMATS: Dict[str, Fmt] = {
++    "b4": Fmt("b4", 4, 112, 8, "CU_TENSOR_MAP_DATA_TYPE_16U4_ALIGN16B", ".b8x16.b4x16_p64"),
++    "b6": Fmt("b6", 6, 64, 12, "CU_TENSOR_MAP_DATA_TYPE_16U6_ALIGN16B", ".b8x16.b6x16_p32"),
++}
++ORDERS = ("lo", "hi")
++
++
++def fmt_of(fmt) -> Fmt:
++    if isinstance(fmt, Fmt):
++        return fmt
++    if fmt not in FORMATS:
++        raise ValueError(f"unknown packed scale format {fmt!r}; known {sorted(FORMATS)}")
++    return FORMATS[fmt]
++
++
++# ================================================================================================ the format (pure)
++def bank_bytes(bank: torch.Tensor) -> torch.Tensor:
++    """uint8 (G, q, 4n) view of an MN-major int32 (G, n, q) bank, in storage order. No copy (checked)."""
++    if bank.dtype != torch.int32 or bank.dim() != 3:
++        raise ValueError(f"scale bank is {tuple(bank.shape)} {bank.dtype}, expected int32 (G, n, q)")
++    g, n, q = bank.shape
++    if tuple(bank.stride()) != (n * q, 1, n):
++        raise ValueError(f"scale bank strides {tuple(bank.stride())} are not the MN-major ({n * q}, 1, {n})")
++    v = bank.transpose(1, 2)
++    if not v.is_contiguous():
++        raise ValueError("scale bank storage is not [group][K word][row] contiguous")
++    out = v.view(torch.uint8)
++    if out.data_ptr() != bank.data_ptr() or tuple(out.shape) != (g, q, 4 * n):
++        raise RuntimeError("scale bank byte view moved or has the wrong shape")
++    return out
++
++
++def col_bytes(sf: torch.Tensor) -> torch.Tensor:
++    """uint8 (g, q, 4n): the columns of an int32 (g, n, q) scale tensor of ANY strides, in bank storage order (a
++    view when the tensor is MN-major, else a copy)."""
++    if sf.dtype != torch.int32 or sf.dim() != 3:
++        raise ValueError(f"scale tensor is {tuple(sf.shape)} {sf.dtype}, expected int32 (g, n, q)")
++    return sf.transpose(1, 2).contiguous().view(torch.uint8)
++
++
++def packed_col_bytes(n: int, fmt) -> int:
++    """Bytes of one packed column of n rows (4 codes a row)."""
++    f = fmt_of(fmt)
++    if (4 * n) % CODES:
++        raise ValueError(f"{n} rows is not a whole number of 16-code groups")
++    return 4 * n // CODES * f.group_bytes
++
++
++def packed_bytes(G: int, n: int, q: int, fmt) -> int:
++    return int(G) * int(q) * packed_col_bytes(n, fmt)
++
++
++def outside(d: torch.Tensor, fmt) -> torch.Tensor:
++    """Bool mask of the code bytes that the format cannot hold."""
++    f = fmt_of(fmt)
++    return (d < f.lo) | (d > f.hi)
++
++
++def pack_codes(d: torch.Tensor, fmt, order: str = "lo") -> torch.Tensor:
++    """Dense code bytes uint8 [..., 16m] -> packed uint8 [..., m * group_bytes]. A code outside the format's range
++    is packed modulo 2^bits (it does not survive unpack; count them with `outside`)."""
++    f = fmt_of(fmt)
++    if order not in ORDERS:
++        raise ValueError(f"order {order!r} must be one of {ORDERS}")
++    if d.dtype != torch.uint8 or d.shape[-1] % CODES:
++        raise ValueError(f"pack_codes: {tuple(d.shape)} {d.dtype}, expected uint8 with a multiple of 16 codes")
++    mask = (1 << f.bits) - 1
++    v = (d - f.bias) & mask                             # uint8 arithmetic wraps: out-of-range codes stay in 0..mask
++    if f.bits == 4:
++        a, b = (v[..., 0::2], v[..., 1::2]) if order == "lo" else (v[..., 1::2], v[..., 0::2])
++        return a | (b << 4)
++    v0, v1, v2, v3 = (v[..., i::4] for i in range(4))
++    if order == "hi":
++        v0, v1, v2, v3 = v3, v2, v1, v0
++    out = torch.empty(d.shape[:-1] + (d.shape[-1] // 4 * 3,), dtype=torch.uint8, device=d.device)
++    b0, b1, b2 = (0, 1, 2) if order == "lo" else (2, 1, 0)
++    out[..., b0::3] = v0 | ((v1 & 3) << 6)
++    out[..., b1::3] = (v1 >> 2) | ((v2 & 15) << 4)
++    out[..., b2::3] = (v2 >> 4) | (v3 << 2)
++    return out
++
++
++def unpack_codes(p: torch.Tensor, fmt, order: str = "lo") -> torch.Tensor:
++    """Packed uint8 [..., m * group_bytes] -> dense code bytes uint8 [..., 16m] (value + bias)."""
++    f = fmt_of(fmt)
++    if order not in ORDERS:
++        raise ValueError(f"order {order!r} must be one of {ORDERS}")
++    if p.dtype != torch.uint8 or p.shape[-1] % f.group_bytes:
++        raise ValueError(f"unpack_codes: {tuple(p.shape)} {p.dtype}, expected uint8 groups of {f.group_bytes} B")
++    if f.bits == 4:
++        out = torch.empty(p.shape[:-1] + (p.shape[-1] * 2,), dtype=torch.uint8, device=p.device)
++        lo, hi = (0, 1) if order == "lo" else (1, 0)
++        out[..., lo::2] = (p & 15) + f.bias
++        out[..., hi::2] = (p >> 4) + f.bias
++        return out
++    b0, b1, b2 = (0, 1, 2) if order == "lo" else (2, 1, 0)
++    x0, x1, x2 = p[..., b0::3], p[..., b1::3], p[..., b2::3]
++    v = [x0 & 63, (x0 >> 6) | ((x1 & 15) << 2), (x1 >> 4) | ((x2 & 3) << 4), x2 >> 2]
++    if order == "hi":
++        v.reverse()
++    out = torch.empty(p.shape[:-1] + (p.shape[-1] // 3 * 4,), dtype=torch.uint8, device=p.device)
++    for i in range(4):
++        out[..., i::4] = v[i] + f.bias
++    return out
++
++
++def kernel_bytes(p: torch.Tensor, fmt, order: str = "lo", shift: Optional[int] = None) -> torch.Tensor:
++    """What the manual says tensor memory holds after the decompressing copy of packed groups written in the
++    manual's own order (LSB first): element i of a group -> byte i = element << shift (b4: 2, b6: 0). A model of the
++    documentation for the tests, not of the hardware."""
++    f = fmt_of(fmt)
++    s = (2 if f.bits == 4 else 0) if shift is None else int(shift)
++    return (unpack_codes(p, f, "lo") - f.bias) << s
++
++
++def bias_word(w: int, bias: int) -> Tuple[int, bool]:
++    """The kernel's k7_bias_word (megamoe_sfpack.py) in Python: the 4 activation scale codes of one uint32 word, each
++    + bias, and whether a code was above 254 - bias (then the sum reaches the e8m0 NaN code or carries)."""
++    act_max = 254 - bias
++    if not 0x80 <= act_max <= 0xFE:
++        raise ValueError(f"bias {bias}: the byte test needs 128 <= 254 - bias")
++    add = (0x7F - (act_max & 0x7F)) * 0x01010101
++    over = (((w & 0x7F7F7F7F) + add) & w & 0x80808080) != 0
++    return (w + bias * 0x01010101) & 0xFFFFFFFF, over
++
++
++# ================================================================================================ a packed bank
++class PackedBank:
++    """One layer's packed scale bank over `raw`, a contiguous uint8 [G * q * P] tensor (P = packed_col_bytes(n)):
++    the bytes the expert kernel reads. `cols` uint8 (G, q, P); `rows32` int32 [G, q * P / 4], one row per group (what
++    the residency manager exchanges and digests)."""
++
++    def __init__(self, raw: torch.Tensor, G: int, n: int, q: int, fmt, order: str = "lo"):
++        self.fmt = fmt_of(fmt)
++        if order not in ORDERS:
++            raise ValueError(f"order {order!r} must be one of {ORDERS}")
++        self.order, self.G, self.n, self.q = order, int(G), int(n), int(q)
++        self.P = packed_col_bytes(self.n, self.fmt)
++        nbytes = self.G * self.q * self.P
++        if raw.dtype != torch.uint8 or raw.dim() != 1 or raw.numel() != nbytes or not raw.is_contiguous():
++            raise ValueError(f"packed bank storage is {tuple(raw.shape)} {raw.dtype}, expected uint8 [{nbytes}]")
++        if (self.q * self.P) % 16 or raw.data_ptr() % 32 or self.P % 32:
++            raise ValueError(f"packed bank: a group of {self.q * self.P} B / a column of {self.P} B / the address "
++                             f"{raw.data_ptr():#x} is not aligned as the residency rows (16 B) and the tensor map "
++                             f"(32 B) need")
++        self.raw = raw
++        self.cols = raw.view(self.G, self.q, self.P)
++        self.rows32 = raw.view(torch.int32).view(self.G, self.q * self.P // 4)
++        if self.cols.data_ptr() != raw.data_ptr() or self.rows32.data_ptr() != raw.data_ptr():
++            raise RuntimeError("packed bank view moved")
++
++    @property
++    def nbytes(self) -> int:
++        return int(self.raw.numel())
++
++    @property
++    def dense_nbytes(self) -> int:
++        return self.G * self.n * self.q * 4
++
++    def write_dense(self, g0: int, cols: torch.Tensor) -> int:
++        """Pack dense columns uint8 (g, q, 4n) (any device) into groups g0.. ; returns the codes outside the
++        format's range (they must be 0 for the bank to be the checkpoint's scales)."""
++        g = int(cols.shape[0])
++        if cols.dtype != torch.uint8 or tuple(cols.shape[1:]) != (self.q, 4 * self.n) or g0 < 0 or g0 + g > self.G:
++            raise ValueError(f"write_dense: {tuple(cols.shape)} {cols.dtype} at group {g0} of {self.G}, expected "
++                             f"uint8 (g, {self.q}, {4 * self.n})")
++        bad = 0
++        for a in range(0, g, CHUNK_GROUPS):
++            d = cols[a:a + CHUNK_GROUPS]
++            bad += int(outside(d, self.fmt).sum())
++            self.cols[g0 + a:g0 + a + d.shape[0]].copy_(pack_codes(d, self.fmt, self.order))
++        return bad
++
++    def mismatch(self, g0: int, cols: torch.Tensor) -> int:
++        """Bytes of dense columns uint8 (g, q, 4n) (any device) that differ from this bank's groups g0.. unpacked."""
++        g = int(cols.shape[0])
++        bad = 0
++        for a in range(0, g, CHUNK_GROUPS):
++            d = cols[a:a + CHUNK_GROUPS].to(self.raw.device)
++            u = unpack_codes(self.cols[g0 + a:g0 + a + d.shape[0]], self.fmt, self.order)
++            bad += int((u != d).sum())
++        return bad
++
++    def dense(self, g0: int, g1: int) -> torch.Tensor:
++        """Groups g0..g1-1 unpacked: a new MN-major int32 (g1 - g0, n, q) tensor on the bank's device."""
++        u = unpack_codes(self.cols[g0:g1], self.fmt, self.order).contiguous()
++        return u.view(torch.int32).view(g1 - g0, self.q, self.n).transpose(1, 2)
++
++
++# ================================================================================================ the tensor map
++def tma_args(pk: PackedBank) -> dict:
++    """cuTensorMapEncodeTiled arguments of a packed bank as the expert kernel loads it: a 3-D tensor of sub-byte
++    elements, dim 0 = the 128 elements (8 groups) the PTX manual fixes as the box size of these types (64 B of
++    .b4x16_p64, 96 B of .b6x16_p32 on sm_100f: 9.7.10.28.5.1), dim 1 = those 8-group pieces down a column, dim 2 =
++    the columns (group * q + K word). One load of box (128, 4, 1) at (0, 4 * N block, column) brings one 128-row
++    block of one column: 32 groups, each padded to 16 B in shared memory, 512 B, the size of the dense block."""
++    f = pk.fmt
++    piece = 8 * f.group_bytes
++    if pk.P % piece or (pk.P // piece) % TMAP_BOX[1]:
++        raise ValueError(f"packed column of {pk.P} B is not a whole number of {TMAP_BOX[1] * piece}-B blocks")
++    a = {"dtype": f.tma_type, "rank": 3, "address": int(pk.raw.data_ptr()),
++         "dims": (TMAP_BOX[0], pk.P // piece, pk.G * pk.q), "strides": (piece, pk.P), "box": TMAP_BOX,
++         "elem_strides": (1, 1, 1), "interleave": "CU_TENSOR_MAP_INTERLEAVE_NONE",
++         "swizzle": "CU_TENSOR_MAP_SWIZZLE_NONE", "l2": "CU_TENSOR_MAP_L2_PROMOTION_L2_256B",
++         "oob": "CU_TENSOR_MAP_FLOAT_OOB_FILL_NONE"}
++    if a["address"] % 32 or any(s % 32 for s in a["strides"]):
++        raise ValueError(f"tensor map: address / strides {a['address']:#x} {a['strides']} must be 32-B aligned")
++    return a
++
++
++def tx_bytes(fmt) -> int:
++    """Global-memory bytes of one packed 128-row block (what the kernel tells its barrier to expect per CTA)."""
++    return TMAP_BOX[1] * 8 * fmt_of(fmt).group_bytes
++
++
++def _enum(mod, name: str) -> int:
++    for obj in vars(mod).values():
++        v = getattr(obj, name, None) if isinstance(obj, type) else None
++        if v is not None:
++            return int(v)
++    if hasattr(mod, name):
++        return int(getattr(mod, name))
++    near = sorted({k for o in vars(mod).values() if isinstance(o, type) for k in vars(o) if "TENSOR_MAP_DATA" in k})
++    raise RuntimeError(f"gracetier K7: the CUDA bindings have no {name}; tensor-map data types they know: {near}")
++
++
++def cuda_encode(args: dict) -> bytes:
++    """The 128 bytes of the tensor map, from the driver (libcuda.so.1 cuTensorMapEncodeTiled through ctypes, as
++    gracetier_vmm.CuDriver calls the VMM entry points; the enum VALUES are read by name from cuda.bindings.driver,
++    the bindings a12_retire's native_scales already imports). Box only."""
++    from cuda.bindings import driver as cu
++
++    lib = ctypes.CDLL("libcuda.so.1")
++    u32, u64 = ctypes.c_uint32, ctypes.c_uint64
++    fn = lib.cuTensorMapEncodeTiled
++    fn.restype = ctypes.c_int
++    fn.argtypes = [ctypes.c_void_p, ctypes.c_int, u32, ctypes.c_void_p, ctypes.POINTER(u64), ctypes.POINTER(u64),
++                   ctypes.POINTER(u32), ctypes.POINTER(u32), ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
++    r = int(args["rank"])
++    buf = ctypes.create_string_buffer(TMAP_BYTES + 64)
++    base = ctypes.addressof(buf)
++    ptr = (base + 63) // 64 * 64
++    rc = fn(ctypes.c_void_p(ptr), _enum(cu, args["dtype"]), r, ctypes.c_void_p(args["address"]),
++            (u64 * r)(*args["dims"]), (u64 * (r - 1))(*args["strides"]), (u32 * r)(*args["box"]),
++            (u32 * r)(*args["elem_strides"]), _enum(cu, args["interleave"]), _enum(cu, args["swizzle"]),
++            _enum(cu, args["l2"]), _enum(cu, args["oob"]))
++    if rc != 0:
++        raise RuntimeError(f"gracetier K7: cuTensorMapEncodeTiled returned CUresult {rc} for {args}")
++    return ctypes.string_at(ptr, TMAP_BYTES)
++
++
++def encode_tma(args: dict, encoder: Optional[Callable[[dict], bytes]] = None) -> bytes:
++    out = (encoder or cuda_encode)(args)
++    if len(out) != TMAP_BYTES:
++        raise RuntimeError(f"gracetier K7: a tensor map of {len(out)} B (expected {TMAP_BYTES})")
++    return bytes(out)
++
++
++# ================================================================================================ the control word
++def k7_views(buffer: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
++    """(desc int64 [1], ctl int32 [K7_WORDS]) views of a SymmBuffer's bytes. desc = the device address of the
++    calling layer's two tensor maps (L1 scales, L2 scales), 0 = the dense (stock) path; gt_stage's program (0, 0)
++    stores it before every MegaMoE of a packed layer. ctl[0] = K7_MAGIC once armed, ctl[1] = the kernel's sticky
++    error word (bit 0: an activation scale code above 254 - bias; bit 1: a packed call the kernel was not built for)."""
++    raw = buffer.view(torch.uint8)
++    if raw.dim() != 1 or raw.numel() < K7_OFFSET + 8 + 4 * K7_WORDS:
++        raise ValueError(f"SymmBuffer of {raw.numel()} B is smaller than the K7 control word's offset {K7_OFFSET}")
++    desc = raw[K7_OFFSET:K7_OFFSET + 8].view(torch.int64)
++    ctl = raw[K7_OFFSET + 8:K7_OFFSET + 8 + 4 * K7_WORDS].view(torch.int32)
++    if desc.data_ptr() != raw.data_ptr() + K7_OFFSET:
++        raise RuntimeError("K7 control word view moved")
++    return desc, ctl
++
++
++# ================================================================================================ the dense address
++def alias_ops(nbytes: int, gran: int) -> int:
++    """Granules of one aliased range of nbytes."""
++    return -(-int(nbytes) // int(gran))
++
++
++def dummy_dense(arena, GV, G: int, shapes: Sequence[Tuple[int, int]], dev, fill: int = 0xFF,
++                view: Optional[Callable] = None) -> tuple:
++    """The dense-shaped tensors DeepGEMM's host side is handed in place of the banks: per (n, q) in `shapes` one
++    MN-major int32 (G, n, q) tensor over a reserved address range whose every granule is mapped onto ONE physical
++    granule (arena.alloc once; gracetier_vmm.VmmArena.map maps one allocation at many addresses, as it does for the
++    shared weight scratch). The host builds its (unused) tensor map from the address and the shape; the K7 kernel
++    never loads through it. The granule holds `fill` (0xFF = the e8m0 NaN code), so a stray dense read poisons the
++    output instead of looking plausible. One pair serves every layer."""
++    view = view or GV.device_view
++    phys = arena.alloc(arena.gran, "k7.sf-dummy")
++    out = []
++    for i, (n, q) in enumerate(shapes):
++        nbytes = int(G) * int(n) * int(q) * 4
++        va = arena.reserve(nbytes)
++        for k in range(alias_ops(nbytes, arena.gran)):
++            arena.map(va + k * arena.gran, arena.gran, phys, 0)
++        if i == 0:
++            view(arena, va, arena.gran, torch.uint8, (arena.gran,), dev).fill_(fill)
++        span = alias_ops(nbytes, arena.gran) * arena.gran
++        t = view(arena, va, span, torch.int32, (int(G), int(q), int(n)), dev).transpose(1, 2)
++        if tuple(t.shape) != (G, n, q) or tuple(t.stride()) != (n * q, 1, n):
++            raise RuntimeError(f"K7 dummy bank is {tuple(t.shape)} / {tuple(t.stride())}, not MN-major ({G}, {n}, {q})")
++        out.append(t)
++    return tuple(out)
++
++
++# ================================================================================================ phase 0 probe
++def pack_bytes(u8: torch.Tensor) -> torch.Tensor:
++    """Dense code bytes uint8 [..., 2m] -> packed uint8 [..., m] (low nibbles; the b4 / lo form)."""
++    if u8.dtype != torch.uint8 or u8.shape[-1] % 2:
++        raise ValueError(f"pack_bytes: {tuple(u8.shape)} {u8.dtype}, expected uint8 with an even last dimension")
++    return (u8[..., 0::2] & 15) | ((u8[..., 1::2] & 15) << 4)
++
++
++def unpack_bytes(p: torch.Tensor) -> torch.Tensor:
++    """Packed uint8 [..., m] -> dense code bytes uint8 [..., 2m] (0x70 | nibble)."""
++    if p.dtype != torch.uint8:
++        raise ValueError(f"unpack_bytes: {p.dtype}, expected uint8")
++    out = torch.empty(p.shape[:-1] + (p.shape[-1] * 2,), dtype=torch.uint8, device=p.device)
++    out[..., 0::2] = (p & 15) | HI
++    out[..., 1::2] = (p >> 4) | HI
++    return out
++
++
++def pack_bank(bank: torch.Tensor) -> torch.Tensor:
++    """The whole bank packed (b4 / lo): uint8 (G, q, 2n), a new tensor on the bank's device."""
++    return pack_bytes(bank_bytes(bank))
++
++
++def new_stats() -> Dict[str, int]:
++    return {"banks": 0, "dense_bytes": 0, "packed_bytes": 0, "lo": 255, "hi": 0, "outside": 0, "mismatch": 0,
++            "mismatch_in_range": 0}
++
++
++def add_stats(tot: Dict[str, int], s: Dict[str, int]) -> Dict[str, int]:
++    for k in ("banks", "dense_bytes", "packed_bytes", "outside", "mismatch", "mismatch_in_range"):
++        tot[k] += s[k]
++    tot["lo"], tot["hi"] = min(tot["lo"], s["lo"]), max(tot["hi"], s["hi"])
++    return tot
++
++
++def probe_bank(bank: torch.Tensor, chunk_groups: int = CHUNK_GROUPS) -> Dict[str, int]:
++    """Pack the bank chunk by chunk (b4 / lo), unpack, compare every byte with the bank. Returns counters:
++    dense_bytes / packed_bytes; lo / hi = the smallest / largest code; outside = code bytes whose high nibble is not
++    7 (they cannot be packed); mismatch = bytes that differ after pack + unpack (must equal `outside`);
++    mismatch_in_range = mismatches among packable codes (must be 0: anything else is a bug in this file).
++    Reads the bank only; its temporaries are freed on return."""
++    v = bank_bytes(bank)
++    s = new_stats()
++    s["banks"] = 1
++    for g0 in range(0, v.shape[0], max(1, int(chunk_groups))):
++        d = v[g0:g0 + chunk_groups]
++        p = pack_bytes(d)
++        u = unpack_bytes(p)
++        bad = (d >> 4) != (HI >> 4)
++        diff = u != d
++        s["dense_bytes"] += d.numel()
++        s["packed_bytes"] += p.numel()
++        s["lo"] = min(s["lo"], int(d.min()))
++        s["hi"] = max(s["hi"], int(d.max()))
++        s["outside"] += int(bad.sum())
++        s["mismatch"] += int(diff.sum())
++        s["mismatch_in_range"] += int((diff & ~bad).sum())
++    return s
++
++
++def ok(s: Dict[str, int]) -> bool:
++    """The pack is lossless for everything probed."""
++    return s["banks"] > 0 and s["outside"] == 0 and s["mismatch"] == 0 and s["packed_bytes"] * 2 == s["dense_bytes"]
++
++
++def summary_line(s: Dict[str, int], layers: int, seconds: float, hot_gib: float = 0.659) -> str:
++    freed = (s["dense_bytes"] - s["packed_bytes"]) / GiB
++    return (f"K7 scale-pack probe: {s['banks']} banks of {layers} layers, dense {s['dense_bytes'] / GiB:.2f} GiB -> "
++            f"4-bit {s['packed_bytes'] / GiB:.2f} GiB (would free {freed:.2f} GiB = +{freed / hot_gib:.1f} hot experts "
++            f"per layer at {hot_gib:.3f} GiB each); codes {s['lo']}..{s['hi']}; outside 0x70..0x7F: {s['outside']}; "
++            f"bytes that differ after pack + unpack: {s['mismatch']} ({s['mismatch_in_range']} among packable codes); "
++            f"{seconds:.1f} s; {'LOSSLESS' if ok(s) else 'NOT LOSSLESS'}. PROBE ONLY: MegaMoE still reads the dense "
++            f"banks and no memory is freed.")
+--- a/tree/fastpath/gracetier_rt/runtime/gracetier_stage.py	2026-11-18 23:55:02
++++ b/tree/fastpath/gracetier_rt/runtime/gracetier_stage.py	2026-11-19 00:31:12
+@@ -240,8 +240,87 @@
+                 Grace source word for word, then copied anyway.
+         tag == key and ctl[0] != 0: no copy. Otherwise gt_stage_kernel's copy, statement for statement, then
+         tag = key. A program reads and writes only its own tag word and its own blocks: no race inside a launch."""
++        c = tl.program_id(0)
++        q = tl.program_id(1)
++        want = H + c
++        acc = tl.zeros([PB], dtype=tl.int32)
++        for it in range(0, (P + PB - 1) // PB):
++            offs = it * PB + tl.arange(0, PB)
++            gv = tl.load(groups + offs, mask=offs < P, other=-1)
++            acc += (gv == want).to(tl.int32)
++            if ECNT:
++                if c == 0:
++                    if q == 0:
++                        e_m = gv >= 0
++                        e_id = tl.load(g2e + gv, mask=e_m, other=0)
++                        tl.atomic_add(ecnt + e_id, e_m.to(tl.int32), mask=e_m, sem="relaxed")
++        hits = tl.sum(acc, axis=0)
++        if hits > 0:
++            if COUNT:
++                if q == 0:
++                    tl.atomic_add(cnt + c, hits)
++            key = KBASE + tl.load(g2e + want)
++            t_ptr = tag + c * NPROG + q
++            skip = ((tl.load(t_ptr) == key) & (tl.load(ctl) != 0)).to(tl.int32)
++            grp = (hits * 0 + c + H).to(tl.int64)
++            a_src = tl.multiple_of(tl.load(src_tab + 2 * c).to(tl.pointer_type(tl.int64)), 16)
++            a_dst = tl.multiple_of(tl.load(dtab + 0).to(tl.pointer_type(tl.int64)), 16) + grp * W1
++            nb1 = (W1 + BW - 1) // BW
++            b_src = tl.multiple_of(tl.load(src_tab + 2 * c + 1).to(tl.pointer_type(tl.int64)), 16)
++            b_dst = tl.multiple_of(tl.load(dtab + 1).to(tl.pointer_type(tl.int64)), 16) + grp * W2
++            nb2 = (W2 + BW - 1) // BW
++            if skip == 0:
++                for ia in range(0, (nb1 + NPROG - 1) // NPROG):
++                    a_off = (q + ia * NPROG) * BW + tl.arange(0, BW)
++                    a_m = a_off < W1
++                    tl.store(a_dst + a_off, tl.load(a_src + a_off, mask=a_m), mask=a_m)
++                for ib in range(0, (nb2 + NPROG - 1) // NPROG):
++                    b_off = (q + ib * NPROG) * BW + tl.arange(0, BW)
++                    b_m = b_off < W2
++                    tl.store(b_dst + b_off, tl.load(b_src + b_off, mask=b_m), mask=b_m)
++                tl.store(t_ptr, key)
++            chk = skip * 0
++            if AUD:
++                chk = skip * ((tl.load(ctl + 1) + c) % AUD == 0).to(tl.int32)
++                if chk > 0:
++                    bad = hits * 0
++                    for ja in range(0, (nb1 + NPROG - 1) // NPROG):
++                        c_off = (q + ja * NPROG) * BW + tl.arange(0, BW)
++                        c_m = c_off < W1
++                        c_sv = tl.load(a_src + c_off, mask=c_m, other=0)
++                        c_dv = tl.load(a_dst + c_off, mask=c_m, other=0)
++                        bad += tl.sum((c_sv != c_dv).to(tl.int32), axis=0)
++                        tl.store(a_dst + c_off, c_sv, mask=c_m)
++                    for jb in range(0, (nb2 + NPROG - 1) // NPROG):
++                        d_off = (q + jb * NPROG) * BW + tl.arange(0, BW)
++                        d_m = d_off < W2
++                        d_sv = tl.load(b_src + d_off, mask=d_m, other=0)
++                        d_dv = tl.load(b_dst + d_off, mask=d_m, other=0)
++                        bad += tl.sum((d_sv != d_dv).to(tl.int32), axis=0)
++                        tl.store(b_dst + d_off, d_sv, mask=d_m)
++                    tl.atomic_add(stat + 3, bad)
++            if q == 0:
++                tl.atomic_add(stat + 0, 1 - skip)
++                tl.atomic_add(stat + 1, skip)
++                tl.atomic_add(stat + 2, chk)
++
++    @triton.jit
++    def gt_stage_sfp_kernel(groups, P, H, src_tab, dtab, cnt, W1, W2, g2e, ecnt, tag, KBASE, ctl, stat, k7w, K7V,
++                            PB: tl.constexpr, BW: tl.constexpr, NPROG: tl.constexpr, COUNT: tl.constexpr,
++                            ECNT: tl.constexpr, AUD: tl.constexpr):
++        """K7 packed scales: gt_stage_skip_kernel, statement for statement, plus ONE store. Program (0, 0) writes
++        K7V into k7w before anything else.
++          k7w   int64 [1]: the SymmBuffer's K7 word (gracetier_sfpack.k7_views). The MegaMoE fork reads it after its
++                grid dependency wait, i.e. after this launch, the one before it on the stream.
++          K7V   the device address of THIS layer's two tensor maps (its packed L1 / L2 scale banks). Every layer
++                shares one SymmBuffer, so the word must name the layer of the call; this launch already runs once
++                per layer call right before MegaMoE, so no launch is added.
++        Program (0, 0) always exists (C >= 1) and runs whether or not a cold expert was picked."""
+         c = tl.program_id(0)
+         q = tl.program_id(1)
++        if c == 0:
++            if q == 0:
++                tl.store(k7w, K7V)
+         want = H + c
+         acc = tl.zeros([PB], dtype=tl.int32)
+         for it in range(0, (P + PB - 1) // PB):
+@@ -338,16 +417,20 @@
+              b1: int, b2: int, *, nprog: Optional[int] = None, block_words: Optional[int] = None,
+              num_warps: Optional[int] = None, g2e: Optional[torch.Tensor] = None,
+              ecnt: Optional[torch.Tensor] = None, count_ids_max: Optional[int] = None,
+-             skip: Optional[tuple] = None) -> Tuple[int, int]:
++             skip: Optional[tuple] = None, sfp: Optional[tuple] = None) -> Tuple[int, int]:
+     """ONE launch of gt_stage_kernel over the C = src_tab.shape[0] cold slots. groups: contiguous int64 (any shape;
+     flattened). b1 / b2: bytes of one L1 / L2 group. Returns the grid.
+     A3, optional: g2e int32 [G] + ecnt int32 [E] (one layer's counter row) -> a call with at most count_ids_max ids
+     (default count_ids()) launches gt_stage_count_kernel instead, which also counts every pick per expert. A larger
+     call, or no g2e / ecnt, launches gt_stage_kernel with the first build's arguments.
+     K6, optional: skip = (tag, key_g2e, kbase, ctl, stat, audit) launches gt_stage_skip_kernel instead (see its
+-    docstring). Absent (the default): every line below runs as before."""
++    docstring). Absent (the default): every line below runs as before.
++    K7, optional: sfp = (k7w int64 [1], k7v) with skip given launches gt_stage_sfp_kernel instead: the skip kernel
++    plus one store of k7v (the layer's tensor-map address) into k7w by program (0, 0). sfp without skip raises."""
+     if not HAVE_TRITON:
+         raise RuntimeError("gt_stage needs triton (box) -- the Mac runs stage_emulated")
++    if sfp is not None and (skip is None or int(src_tab.shape[0]) < 1):
++        raise ValueError("gt_stage: the K7 scale word rides in the skip kernel's launch: sfp needs skip and C >= 1")
+     if groups.dtype != torch.int64 or not groups.is_contiguous():
+         raise ValueError("gt_stage: groups must be contiguous int64")
+     if src_tab.dtype != torch.int64 or tuple(src_tab.shape[1:]) != (2,) or not src_tab.is_contiguous():
+@@ -378,6 +461,15 @@
+             raise ValueError(f"gt_stage: skip kbase {kbase} / audit {aud} must be >= 0")
+         ecount = ecnt is not None and groups.numel() <= (count_ids() if count_ids_max is None
+                                                          else int(count_ids_max))
++        if sfp is not None:             # K7: the same launch also names the layer's packed scale banks
++            k7w, k7v = sfp
++            if k7w.dtype != torch.int64 or k7w.dim() != 1 or k7w.numel() < 1 or int(k7v) <= 0 or int(k7v) % 64:
++                raise ValueError("gt_stage: sfp must be (int64 [>= 1], a 64-B aligned device address > 0)")
++            gt_stage_sfp_kernel[(C, npg)](groups, groups.numel(), int(H), src_tab, dtab, cnt if count else groups,
++                                          W1, W2, kg2e, ecnt if ecount else kg2e, tag, int(kbase), ctl, stat,
++                                          k7w, int(k7v), SCAN_BLOCK, bw, npg, count, ecount, int(aud),
++                                          num_warps=int(num_warps or WARPS_DEFAULT))
++            return C, npg
+         gt_stage_skip_kernel[(C, npg)](groups, groups.numel(), int(H), src_tab, dtab, cnt if count else groups,
+                                        W1, W2, kg2e, ecnt if ecount else kg2e, tag, int(kbase), ctl, stat,
+                                        SCAN_BLOCK, bw, npg, count, ecount, int(aud),

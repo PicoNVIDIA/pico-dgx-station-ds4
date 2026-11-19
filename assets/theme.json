@@ -1,0 +1,31 @@
+{
+  "_comment": "The look of the banner, the charts and the preview page. Edit, then run: python3 tools/make_assets.py",
+  "bg": "#000000",
+  "panel": "#0d0d0d",
+  "panel_border": "#2b2b2b",
+  "grid": "#2b2b2b",
+  "text": "#ffffff",
+  "muted": "#9b9b9b",
+  "accent": "#ffffff",
+  "accent_bright": "#ffffff",
+  "accent_dim": "#2e2e2e",
+  "font": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+  "radius": 14,
+  "series": {
+    "stock_vllm": "#474747",
+    "sglang_patched": "#666666",
+    "public_recipe": "#8f8f8f",
+    "ours_1m": "#cfcfcf",
+    "ours_262k": "#ffffff"
+  },
+  "banner": {
+    "kicker": "DGX STATION  /  ONE GB300  /  DRAFT",
+    "title": "DeepSeek V4.1 Flash",
+    "subtitle": "A tuned one-GPU serving recipe, run as an endpoint",
+    "tiles": [
+      {"big": "540", "small": "tok/s, one user, code"},
+      {"big": "2,148", "small": "tok/s, 32 users"},
+      {"big": "1M", "small": "token max context"}
+    ]
+  }
+}

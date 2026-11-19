@@ -1,0 +1,156 @@
+--- a/tree/fastpath/fastpath_gracetier.py	2026-11-18 12:52:24
++++ b/tree/fastpath/fastpath_gracetier.py	2026-11-18 12:52:24
+@@ -143,6 +143,15 @@
+ RES_CONFIG = os.environ.get("GRACETIER_RES_CONFIG") or os.path.join(_DIR, "gracetier-res.json")
+ RES_MODES = ("adaptive", "off")
+ REPLAY_CHECKS = 256            # CUDA graph replays inside execute_model whose stream is compared with the barrier's
++# K4 stage log -- instrumentation only, OFF unless GRACETIER_STAGE_LOG names a file (in the container: under /prof,
++# the one rw mount). Per engine step and per layer it records which cold experts gt_stage copied, read on the host
++# between steps from counters the kernels ALREADY keep (st.cnt per cold slot; with residency on and
++# GRACETIER_STAGE_LOG_PICKS=1 also the per-expert pick counter). No kernel, argument, tensor the step reads, or
++# captured graph changes; the only GPU work added is one small device concat + one D2H copy between two steps.
++STAGE_LOG = os.environ.get("GRACETIER_STAGE_LOG", "")
++STAGE_LOG_PICKS = os.environ.get("GRACETIER_STAGE_LOG_PICKS", "0") == "1"
++STAGE_LOG_MAX_STEPS = int(os.environ.get("GRACETIER_STAGE_LOG_MAX_STEPS", "2000000"))
++STAGE_LOG_FLUSH = 256
+ _UNSET = object()
+ 
+ 
+@@ -359,6 +368,9 @@
+         self.res_rechecked: Any = False
+         self.res_replays: Any = 0
+         self.res_eager: Any = 0
++        # K4 stage log (unused unless GRACETIER_STAGE_LOG is set)
++        self.states: Any = {}            # layer -> GtState (filled at finalize; read only by the stage log)
++        self.slog: Any = None            # None = not opened yet, False = disabled after an error / the step cap
+ 
+ 
+ _S = _State()
+@@ -701,6 +713,7 @@
+     _prewarm(st, dev)
+     torch.cuda.synchronize(dev)
+     _S.layers_done.add(st.idx)
++    _S.states[st.idx] = st
+     if st.idx in (min(_S.allres), max(_S.allres)):
+         _log(f"finalize layer {st.idx}: G = {E} (hot 0..{H - 1} private HBM, cold {H}..{E - 1} shared VMM scratch), "
+              f"SF banks {tuple(b1.shape)} / {tuple(b2.shape)}, row_map all >= 0, {C} cold sources in Grace; "
+@@ -848,6 +861,103 @@
+ 
+     replay._ds41_gracetier = True
+     cls.replay = replay
++
++
++# ================================================================================================ K4 stage log
++def _stage_log_open() -> dict:
++    """Open the log and write its header line. Called once, at the first execute_model after load."""
++    import atexit
++
++    layers = sorted(_S.states)
++    sts = [_S.states[l] for l in layers]
++    lay, slot = [], []
++    for st in sts:
++        lay += [st.idx] * st.C
++        slot += list(range(st.C))
++    d = os.path.dirname(STAGE_LOG)
++    if d:
++        os.makedirs(d, exist_ok=True)
++    f = open(STAGE_LOG, "a", buffering=1 << 20)
++    picks = bool(STAGE_LOG_PICKS and _S.res_cnt is not None)
++    f.write(json.dumps({"k4_stage_log": 1, "event": "open", "time": time.time(), "pid": os.getpid(),
++                        "layers": layers, "H": {str(st.idx): st.H for st in sts},
++                        "C": {str(st.idx): st.C for st in sts}, "residency": _S.res is not None,
++                        "picks": picks, "topk": TOPK, "E": E,
++                        "cold_boot": {str(st.idx): list(st.cold) for st in sts}}, sort_keys=True) + "\n")
++    atexit.register(lambda: (f.flush(), f.close()) if not f.closed else None)
++    _log(f"K4 stage log ON: {STAGE_LOG} ({len(layers)} layers, {len(lay)} cold slots, per-expert picks "
++         f"{'on' if picks else 'off'}); instrumentation only, do not read throughput from this boot")
++    return {"f": f, "sts": sts, "lay": lay, "slot": slot, "picks": picks, "prev": None, "prev_pk": None,
++            "pend": None, "n": 0}
++
++
++def _stage_log_tick(sched=None) -> None:
++    """Entry of GPUModelRunner.execute_model, BEFORE the residency barrier, only when GRACETIER_STAGE_LOG is set.
++
++    Reads the cumulative counters (a blocking D2H: every kernel of the previous step has finished when it returns),
++    subtracts the previous read and writes ONE JSON line for the PREVIOUS engine step:
++      s      step index (0 = the first execute_model call after the log opened)
++      t      wall time of that step's entry;  ntok / nreq: scheduled tokens / requests of that step (when visible)
++      swaps  residency swaps applied so far (the map the step ran with)
++      cold   {layer: [expert, slot, picks, expert, slot, picks, ...]}  the cold experts gt_stage copied in that step
++      picks  {layer: [expert, n, expert, n, ...]}  every routed pick, hot and cold (residency counter; decode-sized
++             calls only, runtime/gracetier_stage.py count_ids_max); present only with GRACETIER_STAGE_LOG_PICKS=1
++    The slot -> expert map is read from the residency mirror before this call's barrier can swap, so it is the map
++    the previous step ran with. Any failure disables the log (one line in the server log); serving goes on."""
++    sl = _S.slog
++    if sl is False or not _S.states:
++        return
++    try:
++        import torch
++
++        if torch.cuda.is_current_stream_capturing():
++            return
++        if sl is None:
++            sl = _S.slog = _stage_log_open()
++        with torch.inference_mode():
++            cur = torch.cat([st.cnt for st in sl["sts"]]).cpu()
++            pk = _S.res_cnt.cpu() if sl["picks"] else None
++        now = time.time()
++        ntok = getattr(sched, "total_num_scheduled_tokens", None)
++        nst = getattr(sched, "num_scheduled_tokens", None)
++        pend = {"t": round(now, 4), "ntok": ntok if isinstance(ntok, int) else None,
++                "nreq": len(nst) if hasattr(nst, "__len__") else None}
++        if sl["prev"] is not None and sl["pend"] is not None:
++            m = _S.res
++            rec = dict(sl["pend"])
++            rec["s"] = sl["n"]
++            rec["swaps"] = int(m.stats["swaps"]) if m is not None else 0
++            d = cur - sl["prev"]                      # int32 wrap-safe
++            nz = torch.nonzero(d).flatten().tolist()
++            dv = d[nz].tolist() if nz else []
++            cold: dict = {}
++            for i, n in zip(nz, dv):
++                l, c = sl["lay"][i], sl["slot"][i]
++                e = m.state.cold[l][c] if m is not None else _S.states[l].cold[c]
++                cold.setdefault(str(l), []).extend((int(e), int(c), int(n)))
++            rec["cold"] = cold
++            if pk is not None:
++                dp = pk - sl["prev_pk"]
++                idx = torch.nonzero(dp)
++                vals = dp[idx[:, 0], idx[:, 1]].tolist() if idx.numel() else []
++                picks: dict = {}
++                for (l, e), n in zip(idx.tolist(), vals):
++                    picks.setdefault(str(l), []).extend((int(e), int(n)))
++                rec["picks"] = picks
++            sl["f"].write(json.dumps(rec, separators=(",", ":"), sort_keys=True) + "\n")
++            sl["n"] += 1
++            if sl["n"] % STAGE_LOG_FLUSH == 0:
++                sl["f"].flush()
++            if sl["n"] >= STAGE_LOG_MAX_STEPS:
++                sl["f"].flush()
++                sl["f"].close()
++                _S.slog = False
++                _log(f"K4 stage log: {sl['n']} steps written, cap reached; log closed")
++                return
++        sl["prev"], sl["prev_pk"], sl["pend"] = cur, pk, pend
++    except Exception as e:  # noqa: BLE001 - instrumentation must never take the server down
++        _S.slog = False
++        _log(f"K4 stage log DISABLED after an error: {e!r}")
+ 
+ 
+ def _wrap_execute_model(cls) -> None:
+@@ -867,6 +977,8 @@
+ 
+     @functools.wraps(orig)
+     def execute_model(self, *args, **kwargs):
++        if STAGE_LOG:       # K4 instrumentation (off by default): log the previous step's staged cold experts
++            _stage_log_tick(args[0] if args else kwargs.get("scheduler_output"))
+         m = _S.res
+         if m is None:
+             return orig(self, *args, **kwargs)
+@@ -1087,5 +1199,5 @@
+ 
+     load_model._ds41_gracetier = True
+     cls.load_model = load_model
+-    if _res_doc() is not None:          # A3: the barrier. Residency off: execute_model is not touched.
++    if _res_doc() is not None or STAGE_LOG:   # A3: the barrier (K4: or the stage log). Neither: not touched.
+         _wrap_execute_model(cls)

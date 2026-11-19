@@ -1,0 +1,3 @@
+# Control with a dump at the end, then the same config booted on the map fitted to that dump's counters.
+fitdump|c1 s:2,4,8,16,32x2 pf id res:dump-fit.json
+fit302|c1 s:2,4,8,16,32x2 pf id

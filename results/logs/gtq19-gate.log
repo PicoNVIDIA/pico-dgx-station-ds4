@@ -1,0 +1,4 @@
+2026-11-19T08:18:30Z
+audit:        steps 20480 kernel_err 0 audit calls 60996 (T > 16: 8343) words 4065781760 mismatch_words 0 control_words 0
+wrong order:  steps 53248 kernel_err 0 audit calls 159009 (T > 16: 726) words 5595648000 mismatch_words 5246217629 control_words 0
+GATE PASSED: starting the K7 speed cells

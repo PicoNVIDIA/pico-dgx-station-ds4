@@ -1,0 +1,2 @@
+# K6 gate: every skipped copy is compared byte for byte with its source (audit 1). Speed is not read from this cell.
+k6a|c1 id

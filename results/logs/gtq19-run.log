@@ -1,0 +1,257 @@
+start 2026-11-19T08:18:30Z
+== CELL k7kb302  [c1 s:8,32x2 id]  08:18:30
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=kernel-b6 
+0003-megamoe-sf-packed-kernel.patch applied
+k7_serve_insert: inserted after line 335 of tree/serve/serve.sh
+K7 in place, syntax ok
+serving at 08:24:58; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 44.6 s, registered 0.25 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 524,651 tokens, Maximum concurrency for 262,144 tokens per request: 2.00x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7kb302-c1-r1-a: errors 0; decode tok/s 338.22 (20 timed); ms/step 9.126 tok/step 3.046 ms/token 2.996
+k7kb302-c1-r1-b: errors 0; decode tok/s 330.97 (20 timed); ms/step 9.043 tok/step 2.954 ms/token 3.061
+k7kb302-c1-r2-a: errors 0; decode tok/s 337.43 (20 timed); ms/step 9.147 tok/step 3.046 ms/token 3.003
+k7kb302-c1-r2-b: errors 0; decode tok/s 328.19 (20 timed); ms/step 9.119 tok/step 2.954 ms/token 3.087
+k7kb302-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 547.0 (530.2-561.8) | 125 (123-126) | 5.39 (5.32-5.40) | 102.8 (100.1-104.4) | 6 |
+k7kb302-streams2-r1: | 8 | 1,128 | 141.0 | 3.033 | 60 |
+k7kb302-streams2-r1: | 32 | 2,228 | 69.6 | 3.06 | 60 |
+k7kb302-streams2-r2: | 8 | 1,195 | 149.4 | 3.039 | 60 |
+k7kb302-streams2-r2: | 32 | 2,248 | 70.2 | 3.064 | 60 |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq19-k7kb302-c1.json
+k7kb302-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 4
+K7 packed scales: mode kernel, format b6, order lo, audit layers none
+K7 packed scales: mode kernel, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'} is live; the scale banks are dense and no SymmBuffer's K7 word is ever set, so every call takes the kerne
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 28672 copies 1490745 skipped 204599 (12.1 % of staged experts; last 64 steps: 3778 / 910) audited 0 mismatch_words 0 swap_invalidations 11270 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 1517654, "copied_since": 1257, "enabled": true, "event": "stage_skip", "host_steps": 29888, "lanes": 1, "mismatch_words": 0, "skipped": 217173, "skipped_since": 584, "swap_invalidations": 11777
+after: ds41 Up 14 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 2852, "cold_share": 0.026885369532428358, "drains": 467, "event": "drain", "freeze": false, "host_steps": 29888, "hot_moved": 1659, "pending": 25, "queued": 25, "sel": 106080, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 11
+CELL_DONE k7kb302 08:33:22
+== CELL k7p302  [c1 s:2,4,8,16,32x2 pf id]  08:33:22
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 08:38:33; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 44.8 s, registered 0.23 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 1,399,144 tokens, Maximum concurrency for 262,144 tokens per request: 5.34x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7p302-c1-r1-a: errors 0; decode tok/s 332.59 (20 timed); ms/step 9.281 tok/step 3.046 ms/token 3.047
+k7p302-c1-r1-b: errors 0; decode tok/s 325.18 (20 timed); ms/step 9.204 tok/step 2.954 ms/token 3.115
+k7p302-c1-r2-a: errors 0; decode tok/s 332.57 (20 timed); ms/step 9.281 tok/step 3.046 ms/token 3.047
+k7p302-c1-r2-b: errors 0; decode tok/s 326.1 (20 timed); ms/step 9.178 tok/step 2.954 ms/token 3.106
+k7p302-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 531.0 (505.4-553.7) | 121 (117-124) | 5.28 (5.04-5.39) | 103.1 (100.5-104.0) | 6 |
+k7p302-streams2-r1: | 2 | 592 | 296.1 | 3.643 | 60 |
+k7p302-streams2-r1: | 4 | 841 | 210.3 | 3.661 | 60 |
+k7p302-streams2-r1: | 8 | 1,202 | 150.3 | 3.092 | 60 |
+k7p302-streams2-r1: | 16 | 1,674 | 104.6 | 3.03 | 60 |
+k7p302-streams2-r1: | 32 | 2,231 | 69.7 | 3.043 | 60 |
+k7p302-streams2-r2: | 2 | 598 | 299.3 | 3.632 | 60 |
+k7p302-streams2-r2: | 4 | 857 | 214.3 | 3.725 | 60 |
+k7p302-streams2-r2: | 8 | 1,190 | 148.7 | 3.053 | 60 |
+k7p302-streams2-r2: | 16 | 1,675 | 104.7 | 3.06 | 60 |
+k7p302-streams2-r2: | 32 | 2,247 | 70.2 | 3.048 | 60 |
+k7p302-prefill: | 14251 (14226-14274) | 309 (293-2486) | 46120 (24582-48930) |
+k7p302-prefill: | 56836 (56814-56857) | 1060 (1058-1069) | 53567 (53128-53732) |
+k7p302-prefill: | 113729 (113715-113734) | 2139 (2133-2151) | 53176 (52882-53310) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 34s -> /raid/work/ident/gtq19-k7p302-c1.json
+k7p302-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 23
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 49152 kernel_err 0
+K7 packed scales: steps 53248 kernel_err 0
+K7 packed scales: steps 57344 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 57344 copies 2095373 skipped 302691 (12.6 % of staged experts; last 64 steps: 1808 / 491) audited 0 mismatch_words 0 swap_invalidations 14932 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2150843, "copied_since": 1356, "enabled": true, "event": "stage_skip", "host_steps": 59072, "lanes": 1, "mismatch_words": 0, "skipped": 321772, "skipped_since": 649, "swap_invalidations": 15743
+after: ds41 Up 21 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3055, "cold_share": 0.028540732436472347, "drains": 923, "event": "drain", "freeze": false, "host_steps": 59072, "hot_moved": 1663, "pending": 30, "queued": 30, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 15
+CELL_DONE k7p302 08:55:15
+== CELL k7p307  [c1 s:2,4,8,16,32x2 pf id]  08:55:15
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 09:01:32; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [307], G = 384, 18480 cold tensors in Grace (50.76 GiB, read 41.9 s, registered 0.18 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 444,887 tokens, Maximum concurrency for 262,144 tokens per request: 1.70x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7p307-c1-r1-a: errors 0; decode tok/s 337.31 (20 timed); ms/step 9.151 tok/step 3.046 ms/token 3.004
+k7p307-c1-r1-b: errors 0; decode tok/s 330.61 (20 timed); ms/step 9.052 tok/step 2.954 ms/token 3.064
+k7p307-c1-r2-a: errors 0; decode tok/s 337.92 (20 timed); ms/step 9.134 tok/step 3.046 ms/token 2.999
+k7p307-c1-r2-b: errors 0; decode tok/s 331.19 (20 timed); ms/step 9.037 tok/step 2.954 ms/token 3.059
+k7p307-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 539.6 (526.2-555.5) | 116 (112-119) | 5.34 (5.22-5.45) | 102.3 (101.3-103.8) | 6 |
+k7p307-streams2-r1: | 2 | 598 | 299.2 | 3.694 | 60 |
+k7p307-streams2-r1: | 4 | 852 | 212.9 | 3.683 | 60 |
+k7p307-streams2-r1: | 8 | 1,202 | 150.3 | 3.051 | 60 |
+k7p307-streams2-r1: | 16 | 1,709 | 106.8 | 3.054 | 60 |
+k7p307-streams2-r1: | 32 | 2,267 | 70.8 | 3.053 | 60 |
+k7p307-streams2-r2: | 2 | 609 | 304.7 | 3.693 | 60 |
+k7p307-streams2-r2: | 4 | 859 | 214.8 | 3.679 | 60 |
+k7p307-streams2-r2: | 8 | 1,213 | 151.6 | 3.056 | 60 |
+k7p307-streams2-r2: | 16 | 1,695 | 105.9 | 3.056 | 60 |
+k7p307-streams2-r2: | 32 | 2,263 | 70.7 | 3.07 | 60 |
+k7p307-prefill: | 14246 (14232-14246) | 309 (291-342) | 46074 (42040-49064) |
+k7p307-prefill: | 56884 (56865-56904) | 1063 (1047-1073) | 53523 (52979-54338) |
+k7p307-prefill: | 113773 (113724-113783) | 2154 (2144-2159) | 52764 (52683-53056) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq19-k7p307-c1.json
+k7p307-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 23
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 49152 kernel_err 0
+K7 packed scales: steps 53248 kernel_err 0
+K7 packed scales: steps 57344 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 57344 copies 1794130 skipped 265840 (12.9 % of staged experts; last 64 steps: 1384 / 792) audited 0 mismatch_words 0 swap_invalidations 13864 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 1850138, "copied_since": 1202, "enabled": true, "event": "stage_skip", "host_steps": 59456, "lanes": 1, "mismatch_words": 0, "skipped": 288465, "skipped_since": 549, "swap_invalidations": 14773
+after: ds41 Up 22 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 2586, "cold_share": 0.024051339285714287, "drains": 929, "event": "drain", "freeze": false, "host_steps": 59456, "hot_moved": 1630, "pending": 28, "queued": 28, "sel": 107520, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 14
+CELL_DONE k7p307 09:18:07
+== CELL k7p296m  [c1 s:2,4,8,16,32x2 pf id]  09:18:07
+policy additions: DS41_UTIL=0.98 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 09:25:03; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [296], G = 384, 21120 cold tensors in Grace (58.01 GiB, read 47.6 s, registered 0.18 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 1,385,011 tokens, Maximum concurrency for 1,048,576 tokens per request: 1.32x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7p296m-c1-r1-a: errors 0; decode tok/s 323.45 (20 timed); ms/step 9.543 tok/step 3.046 ms/token 3.133
+k7p296m-c1-r1-b: errors 0; decode tok/s 317.76 (20 timed); ms/step 9.419 tok/step 2.954 ms/token 3.188
+k7p296m-c1-r2-a: errors 0; decode tok/s 320.3 (20 timed); ms/step 9.637 tok/step 3.046 ms/token 3.164
+k7p296m-c1-r2-b: errors 0; decode tok/s 318.97 (20 timed); ms/step 9.383 tok/step 2.954 ms/token 3.176
+k7p296m-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 520.2 (510.8-522.3) | 126 (121-128) | 5.21 (5.11-5.46) | 99.2 (96.8-101.8) | 6 |
+k7p296m-streams2-r1: | 2 | 583 | 291.3 | 3.662 | 60 |
+k7p296m-streams2-r1: | 4 | 817 | 204.3 | 3.605 | 60 |
+k7p296m-streams2-r1: | 8 | 1,162 | 145.3 | 3.047 | 60 |
+k7p296m-streams2-r1: | 16 | 1,617 | 101.1 | 3.032 | 60 |
+k7p296m-streams2-r1: | 32 | 2,147 | 67.1 | 3.061 | 60 |
+k7p296m-streams2-r2: | 2 | 614 | 307.1 | 3.825 | 60 |
+k7p296m-streams2-r2: | 4 | 827 | 206.8 | 3.635 | 60 |
+k7p296m-streams2-r2: | 8 | 1,159 | 144.8 | 3.012 | 60 |
+k7p296m-streams2-r2: | 16 | 1,628 | 101.7 | 3.083 | 60 |
+k7p296m-streams2-r2: | 32 | 2,106 | 65.8 | 3.054 | 60 |
+k7p296m-prefill: | 14244 (14241-14246) | 285 (283-326) | 49958 (44421-50243) |
+k7p296m-prefill: | 56838 (56776-56840) | 1082 (1073-1136) | 52415 (50071-52900) |
+k7p296m-prefill: | 113746 (113671-113772) | 2200 (2191-2211) | 51700 (51455-51889) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 35s -> /raid/work/ident/gtq19-k7p296m-c1.json
+k7p296m-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 23
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 49152 kernel_err 0
+K7 packed scales: steps 53248 kernel_err 0
+K7 packed scales: steps 57344 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 57344 copies 2517685 skipped 350082 (12.2 % of staged experts; last 64 steps: 1038 / 567) audited 0 mismatch_words 0 swap_invalidations 15502 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2532386, "copied_since": 1694, "enabled": true, "event": "stage_skip", "host_steps": 57984, "lanes": 1, "mismatch_words": 0, "skipped": 357267, "skipped_since": 688, "swap_invalidations": 15736
+after: ds41 Up 23 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3871, "cold_share": 0.03600260416666667, "drains": 906, "event": "drain", "freeze": false, "host_steps": 57984, "hot_moved": 1675, "pending": 32, "queued": 32, "sel": 107520, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 157
+CELL_DONE k7p296m 09:41:46
+== CELL k7p308  [c1 s:8,32x2 id]  09:41:46
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 DS41_GT_SF_PACK=a2b6 
+0003-megamoe-sf-packed-kernel.patch already applied
+k7_serve_insert: tree/serve/serve.sh already has the K7 line (1)
+K7 in place, syntax ok
+serving at 09:48:54; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [308], G = 384, 18240 cold tensors in Grace (50.10 GiB, read 39.7 s, registered 0.22 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 268,475 tokens, Maximum concurrency for 262,144 tokens per request: 1.02x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+k7p308-c1-r1-a: errors 0; decode tok/s 339.89 (20 timed); ms/step 9.081 tok/step 3.046 ms/token 2.982
+k7p308-c1-r1-b: errors 0; decode tok/s 332.11 (20 timed); ms/step 9.012 tok/step 2.954 ms/token 3.05
+k7p308-c1-r2-a: errors 0; decode tok/s 339.93 (20 timed); ms/step 9.08 tok/step 3.046 ms/token 2.981
+k7p308-c1-r2-b: errors 0; decode tok/s 331.73 (20 timed); ms/step 9.022 tok/step 2.954 ms/token 3.054
+k7p308-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 539.5 (530.6-546.8) | 118 (114-120) | 5.36 (5.17-5.46) | 102.4 (101.2-104.3) | 6 |
+k7p308-streams2-r1: | 8 | 1,153 | 144.1 | 3.031 | 60 |
+k7p308-streams2-r1: | 32 | 2,261 | 70.7 | 3.063 | 60 |
+k7p308-streams2-r2: | 8 | 1,200 | 149.9 | 3.058 | 60 |
+k7p308-streams2-r2: | 32 | 2,264 | 70.8 | 3.054 | 60 |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq19-k7p308-c1.json
+k7p308-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K7 lines in the server log: 16
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+K7 packed scales: mode a2, format b6, order lo, audit layers none
+W6_MEGAMOE: K7 packed-scale kernel variant {'fmt': 'b6', 'cp': 'decomp', 'tag': 'b6d', 'bits': 6, 'bias': 64, 'tx': 384, 'cpfmt': '.b8x16.b6x16_p32'}: megamoe_sfpack's 13 edits rendered onto the impl header; a SymmBuffer whose K7 
+K7 dense-shaped scale tensors for DeepGEMM's host side: [(384, 4608, 40), (384, 5120, 18)] int32 over 203 mappings of one 2097152 B allocation filled with 0xFF (never read by the K7 kernel; a stray dense read gives NaN scales)
+K7 packed scales ARMED: 40 layers, 6 bits a code (bias 64, order lo), 11.953 GiB allocated for 15.820 GiB of dense scales = 3.867 GiB less, worth 5.9 hot experts per layer at 0.659 GiB each; kernel variant {'fmt': 'b6', 'cp': 'dec
+K7 packed scales: steps 20480 kernel_err 0
+K7 packed scales: steps 24576 kernel_err 0
+K7 packed scales: steps 28672 kernel_err 0
+kernel include root now:    W6_MEGAMOE: JIT include root /tmp/ds41-megamoe-fork/shared-early-k7b6d-4db01e7347df412a (pipeline variant shared-early)
+kernel include root before: 
+DS41_FASTPATH ACTIVE a12_memory_guard
+server log error lines: 0
+K6 stage skip: steps 28672 copies 1259172 skipped 179723 (12.5 % of staged experts; last 64 steps: 4635 / 857) audited 0 mismatch_words 0 swap_invalidations 10651 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 1289252, "copied_since": 1172, "enabled": true, "event": "stage_skip", "host_steps": 30080, "lanes": 1, "mismatch_words": 0, "skipped": 193511, "skipped_since": 567, "swap_invalidations": 11254
+after: ds41 Up 15 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 2733, "cold_share": 0.025305555555555557, "drains": 470, "event": "drain", "freeze": false, "host_steps": 30080, "hot_moved": 1619, "pending": 28, "queued": 28, "sel": 108000, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 11
+CELL_DONE k7p308 09:57:16
+== CELL k7p297m  [c1 s:8,32x2 id]  09:57:16
+CUT after k7p308 by queue 20 at 09:57:31 (k7p297m dropped; serve524r moves to queue 20)
+DONE

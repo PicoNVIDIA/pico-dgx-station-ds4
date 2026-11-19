@@ -1,0 +1,113 @@
+K4 stage log: 22485 steps analysed, 40 layers, H [285], residency True, picks True, segments in file 1 (last one used)
+  residency swaps during the log: 12268
+
+== all: 22485 steps ==
+1. census: 1.90 cold experts staged per layer-call (max 50, 34.2 % of layer-calls stage none); 76.0 per step; cold picks per staged expert 1.62
+   modeled serial staging: 3.94 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 29.9  W=2: 39.4  W=4: 50.1  W=8: 61.2  W=16: 71.7
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 32.4 [2.6]  K=8: 43.9 [5.3]  K=16: 57.7 [10.5]  K=32: 74.7 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 14.3  lanes=2: 24.8  lanes=4: 38.2  lanes=8: 55.0
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   29.9  waste   70.1  size   1.90
+   prev-2  steps      recall   39.4  waste   76.8  size   3.23
+   prev-4  steps      recall   50.1  waste   82.4  size   5.42
+   prev-8  steps      recall   61.2  waste   86.9  size   8.84
+   counter top-1      recall    7.5  waste   85.7  size   1.00
+   counter top-2      recall   13.2  waste   87.5  size   2.00
+   counter top-4      recall   21.9  waste   89.6  size   4.00
+   counter top-8      recall   35.0  waste   91.7  size   8.00
+   counter top-16     recall   52.7  waste   93.7  size  16.00
+   (counter = decayed pick count of staged experts, half-life 64.0 steps)
+
+== nreq=1: 18199 steps ==
+1. census: 1.28 cold experts staged per layer-call (max 41, 38.7 % of layer-calls stage none); 51.0 per step; cold picks per staged expert 1.59
+   modeled serial staging: 2.72 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 35.8  W=2: 43.6  W=4: 51.2  W=8: 58.9  W=16: 66.3
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 46.4 [2.6]  K=8: 58.7 [5.3]  K=16: 70.2 [10.5]  K=32: 81.2 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 23.6  lanes=2: 37.3  lanes=4: 51.3  lanes=8: 65.6
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   35.8  waste   63.6  size   1.25
+   prev-2  steps      recall   43.6  waste   73.0  size   2.06
+   prev-4  steps      recall   51.2  waste   80.9  size   3.42
+   prev-8  steps      recall   58.9  waste   86.8  size   5.71
+   counter top-1      recall   10.3  waste   86.9  size   1.00
+   counter top-2      recall   17.5  waste   88.8  size   2.00
+   counter top-4      recall   28.0  waste   91.1  size   4.00
+   counter top-8      recall   42.0  waste   93.3  size   8.00
+   counter top-16     recall   58.8  waste   95.3  size  16.00
+
+== nreq=17-32: 1399 steps ==
+1. census: 6.63 cold experts staged per layer-call (max 42, 2.4 % of layer-calls stage none); 265.2 per step; cold picks per staged expert 1.23
+   modeled serial staging: 13.15 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 20.3  W=2: 32.4  W=4: 48.3  W=8: 65.6  W=16: 80.8
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 10.8 [2.6]  K=8: 19.4 [5.3]  K=16: 34.2 [10.5]  K=32: 59.0 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 1.7  lanes=2: 7.1  lanes=4: 18.7  lanes=8: 37.9
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   20.3  waste   79.7  size   6.63
+   prev-2  steps      recall   32.4  waste   82.0  size  11.91
+   prev-4  steps      recall   48.3  waste   84.2  size  20.27
+   prev-8  steps      recall   65.6  waste   86.4  size  31.97
+   counter top-1      recall    3.6  waste   76.2  size   1.00
+   counter top-2      recall    6.8  waste   77.5  size   2.00
+   counter top-4      recall   12.7  waste   78.9  size   4.00
+   counter top-8      recall   23.3  waste   80.7  size   8.00
+   counter top-16     recall   40.9  waste   83.1  size  16.00
+
+== nreq=5-8: 2633 steps ==
+1. census: 3.87 cold experts staged per layer-call (max 50, 14.1 % of layer-calls stage none); 154.8 per step; cold picks per staged expert 1.56
+   modeled serial staging: 7.78 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 25.5  W=2: 36.3  W=4: 49.0  W=8: 62.6  W=16: 75.7
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 20.3 [2.6]  K=8: 32.7 [5.3]  K=16: 50.6 [10.5]  K=32: 74.1 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 4.7  lanes=2: 12.6  lanes=4: 26.2  lanes=8: 46.5
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   25.5  waste   74.6  size   3.88
+   prev-2  steps      recall   36.3  waste   79.3  size   6.77
+   prev-4  steps      recall   49.0  waste   83.4  size  11.43
+   prev-8  steps      recall   62.6  waste   86.9  size  18.42
+   counter top-1      recall    4.9  waste   81.0  size   1.00
+   counter top-2      recall    9.1  waste   82.3  size   2.00
+   counter top-4      recall   16.7  waste   83.9  size   4.00
+   counter top-8      recall   29.8  waste   85.6  size   8.00
+   counter top-16     recall   49.5  waste   88.0  size  16.00
+
+== nreq>32: 249 steps ==
+1. census: 0.02 cold experts staged per layer-call (max 20, 99.6 % of layer-calls stage none); 0.9 per step; cold picks per staged expert 924.15
+   modeled serial staging: 0.28 ms/step (48.7 us/expert + 6.0 us/layer fixed) [model, not a measurement]
+2. repeat rate, % of staged experts the same layer also staged in the previous W steps:
+   W=1: 11.4  W=2: 26.4  W=4: 38.2  W=8: 46.4  W=16: 46.4
+3. per-layer LRU staged cache (private memory), hit % of staged experts [HBM GiB for all layers]:
+   K=4: 15.5 [2.6]  K=8: 20.9 [5.3]  K=16: 35.9 [10.5]  K=32: 45.9 [21.1]
+4. shared-scratch persistence (zero extra HBM at 1 lane), hit % of staged experts:
+   lanes=1: 2.7  lanes=2: 5.5  lanes=4: 15.5  lanes=8: 27.3
+5. predictors (recall = % of staged experts predicted; waste = % of predicted not staged; size = predicted per layer-call):
+   prev-1  steps      recall   11.4  waste   99.8  size   1.50
+   prev-2  steps      recall   26.4  waste   99.8  size   2.66
+   prev-4  steps      recall   38.2  waste   99.8  size   4.19
+   prev-8  steps      recall   46.4  waste   99.8  size   6.76
+   counter top-1      recall    1.8  waste  100.0  size   1.00
+   counter top-2      recall    2.7  waste  100.0  size   2.00
+   counter top-4      recall    8.2  waste  100.0  size   4.00
+   counter top-8      recall   20.5  waste   99.9  size   8.00
+   counter top-16     recall   34.5  waste  100.0  size  15.97
+
+6. extra hot experts per layer (static; fitted on the first half of the log, scored on the second half):
+   +4  per layer [2.64 GiB]: uniform removes 2.3 % of staged copies; water-filled over layers 4.8 % (max 47 in one layer)
+   +8  per layer [5.27 GiB]: uniform removes 4.7 % of staged copies; water-filled over layers 7.7 % (max 61 in one layer)
+   +16 per layer [10.55 GiB]: uniform removes 9.2 % of staged copies; water-filled over layers 13.4 % (max 71 in one layer)
+   +32 per layer [21.09 GiB]: uniform removes 19.0 % of staged copies; water-filled over layers 22.7 % (max 89 in one layer)
+   Compare row k here with LRU K = k in section 3: same HBM. The LRU is only worth building if it wins.
+
+scheduled tokens per step (value: steps), top 8: [(6, 12064), (8, 5926), (32, 2196), (128, 640), (124, 275), (0, 249), (28, 212), (120, 50)]
+Removed steps (filters) are treated as if they never ran: use --max-ntok to keep prefill out of the repeat and cache numbers, or leave it in to see what a real mixed run does.

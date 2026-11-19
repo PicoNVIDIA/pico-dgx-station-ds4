@@ -1,0 +1,103 @@
+start 2026-11-19T03:44:33Z
+== CELL fitdump  [c1 s:2,4,8,16,32x2 pf id res:dump-fit.json]  03:44:33
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 
+K6 in place, syntax ok
+hot map: 40 layers x 302 -> /raid/work/run/cells/hot-302.json
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-302.json, all entries >= 0, permutat
+serving at 03:54:43; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 49.3 s, registered 0.18 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 520,576 tokens, Maximum concurrency for 262,144 tokens per request: 1.99x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+fitdump-c1-r1-a: errors 0; decode tok/s 343.9 (20 timed); ms/step 8.975 tok/step 3.046 ms/token 2.947
+fitdump-c1-r1-b: errors 0; decode tok/s 337.09 (20 timed); ms/step 8.879 tok/step 2.954 ms/token 3.005
+fitdump-c1-r2-a: errors 0; decode tok/s 343.78 (20 timed); ms/step 8.979 tok/step 3.046 ms/token 2.948
+fitdump-c1-r2-b: errors 0; decode tok/s 335.55 (20 timed); ms/step 8.919 tok/step 2.954 ms/token 3.019
+fitdump-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 571.2 (561.2-586.6) | 120 (118-122) | 5.60 (5.59-5.64) | 103.3 (101.7-104.8) | 6 |
+fitdump-streams2-r1: | 2 | 610 | 304.9 | 3.604 | 60 |
+fitdump-streams2-r1: | 4 | 861 | 215.2 | 3.619 | 60 |
+fitdump-streams2-r1: | 8 | 1,236 | 154.6 | 3.044 | 60 |
+fitdump-streams2-r1: | 16 | 1,728 | 108.0 | 3.057 | 60 |
+fitdump-streams2-r1: | 32 | 2,320 | 72.5 | 3.033 | 60 |
+fitdump-streams2-r2: | 2 | 631 | 315.4 | 3.677 | 60 |
+fitdump-streams2-r2: | 4 | 870 | 217.6 | 3.656 | 60 |
+fitdump-streams2-r2: | 8 | 1,224 | 153.0 | 3.044 | 60 |
+fitdump-streams2-r2: | 16 | 1,711 | 106.9 | 3.078 | 60 |
+fitdump-streams2-r2: | 32 | 2,288 | 71.5 | 3.046 | 60 |
+fitdump-prefill: | 14251 (14245-14284) | 308 (291-336) | 46450 (42806-49266) |
+fitdump-prefill: | 56877 (56864-56889) | 1049 (1038-1061) | 54191 (53617-54825) |
+fitdump-prefill: | 113714 (113667-113836) | 2136 (2128-2145) | 53185 (52996-53462) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq14-fitdump-c1.json
+fitdump-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+residency control: {"dump": "fit302", "note": "queue 14: map and counters after the benchmark mix"}
+ctrl {"dump": "fit302", "note": "queue 14: map and counters after the benchmark mix"} seq 1795061474946: ack yes after 0.705 s / 1 nudges; ['dump /prof/gracetier-res/dump-fit302.json']; settled(ack) True; state {"pending": 39, "at_boot": false, "freeze": false, "hot_moved": 1670, "swaps": 15629}
+K6 stage skip: steps 40960 copies 1284296 skipped 220923 (14.7 % of staged experts; last 64 steps: 625 / 175) audited 0 mismatch_words 0 swap_invalidations 12524 lanes 1 enabled 1
+K6 stage skip: steps 45056 copies 1349118 skipped 233344 (14.7 % of staged experts; last 64 steps: 1184 / 182) audited 0 mismatch_words 0 swap_invalidations 13254 lanes 1 enabled 1
+K6 stage skip: steps 49152 copies 1447689 skipped 248644 (14.7 % of staged experts; last 64 steps: 1976 / 219) audited 0 mismatch_words 0 swap_invalidations 13794 lanes 1 enabled 1
+K6 stage skip: steps 53248 copies 1610971 skipped 265139 (14.1 % of staged experts; last 64 steps: 3984 / 327) audited 0 mismatch_words 0 swap_invalidations 14072 lanes 1 enabled 1
+K6 stage skip: steps 57344 copies 2099322 skipped 285717 (12.0 % of staged experts; last 64 steps: 3529 / 1017) audited 0 mismatch_words 0 swap_invalidations 14371 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2199552, "copied_since": 2097, "enabled": true, "event": "stage_skip", "host_steps": 60288, "lanes": 1, "mismatch_words": 0, "skipped": 322771, "skipped_since": 581, "swap_invalidations": 15629
+dump fit302: 40 layers, 302 hot of 384, host steps 60289, swaps 15629, hot_moved 1670, picks counted 475,296,786
+  boot map                         covers  95.06 % of the picks (cold share  4.94 %)
+  manager's hot set at the dump    covers  98.53 % of the picks (cold share  1.47 %)
+  top-302 by count                 covers  99.04 % of the picks (cold share  0.96 %)
+  top-302 by count: shares 258.4 experts a layer with the boot map (min 249), 283.6 with the manager's set (min 275); never-picked experts in it 0.0 a layer
+  wrote /raid/work/run/cells/hot-fitcnt302.json and /raid/work/run/cells/hot-fitres302.json
+after: ds41 Up 26 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 5298, "cold_share": 0.04696808510638298, "drains": 942, "event": "drain", "freeze": false, "host_steps": 60288, "hot_moved": 1670, "pending": 39, "queued": 39, "sel": 112800, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 156
+CELL_DONE fitdump 04:11:16
+== CELL fit302  [c1 s:2,4,8,16,32x2 pf id]  04:11:16
+policy additions: DS41_UTIL=0.98 DS41_MAXLEN=262144 DS41_GT_STAGE_SKIP=1 
+serve.sh: K6 env lines already present
+K6 in place, syntax ok
+make_rowmap_allres: 40 layers, H=302 (per-layer [302]), source rowmap-mix-v1-h255.json sha256 10df39c60ef7d1fb, hot_map hot-fitcnt302.json, all entries >= 0, pe
+serving at 04:16:48; num_speculative_tokens_per_batch_size': [[1, 4, 5], [5, 8, 3], [9, 32, 3]]
+DS41_FASTPATH gracetier: ENGAGED: 40 layers, H [302], G = 384, 19680 cold tensors in Grace (54.05 GiB, read 43.3 s, registered 0.86 s)
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: none
+GPU KV cache size: 522,905 tokens, Maximum concurrency for 262,144 tokens per request: 1.99x
+DS41_FASTPATH suffix: dynamic K: added the 1 x 8 FULL decode graph
+DS41_FASTPATH suffix: captured FULL 1-request decode graphs: 1 x 4, 1 x 6, 1 x 8, 1 x 32
+SMOKE PASS
+fit302-c1-r1-a: errors 0; decode tok/s 343.22 (20 timed); ms/step 8.993 tok/step 3.046 ms/token 2.953
+fit302-c1-r1-b: errors 0; decode tok/s 327.5 (20 timed); ms/step 9.138 tok/step 2.954 ms/token 3.093
+fit302-c1-r2-a: errors 0; decode tok/s 342.26 (20 timed); ms/step 9.018 tok/step 3.046 ms/token 2.961
+fit302-c1-r2-b: errors 0; decode tok/s 335.58 (20 timed); ms/step 8.918 tok/step 2.954 ms/token 3.019
+fit302-fixed: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 565.0 (564.4-568.4) | 121 (115-122) | 5.40 (5.32-5.57) | 105.0 (101.7-106.1) | 6 |
+fit302-streams2-r1: | 2 | 618 | 309.1 | 3.698 | 60 |
+fit302-streams2-r1: | 4 | 874 | 218.5 | 3.728 | 60 |
+fit302-streams2-r1: | 8 | 1,244 | 155.5 | 3.093 | 60 |
+fit302-streams2-r1: | 16 | 1,731 | 108.2 | 3.092 | 60 |
+fit302-streams2-r1: | 32 | 2,310 | 72.2 | 3.041 | 60 |
+fit302-streams2-r2: | 2 | 622 | 311.2 | 3.702 | 60 |
+fit302-streams2-r2: | 4 | 883 | 220.7 | 3.761 | 60 |
+fit302-streams2-r2: | 8 | 1,235 | 154.4 | 3.079 | 60 |
+fit302-streams2-r2: | 16 | 1,713 | 107.1 | 3.057 | 60 |
+fit302-streams2-r2: | 32 | 2,301 | 71.9 | 3.054 | 60 |
+fit302-prefill: | 14258 (14246-14264) | 300 (287-331) | 47542 (43432-49734) |
+fit302-prefill: | 56891 (56838-56949) | 1064 (1052-1073) | 53464 (52954-54118) |
+fit302-prefill: | 113687 (113664-113750) | 2159 (2151-2166) | 52627 (52498-52836) |
+captured 40/40 prompts, 9202 tokens with logprobs, concurrency 1, 33s -> /raid/work/ident/gtq14-fit302-c1.json
+fit302-c1 vs reference: identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+real divergences 0; first-difference position median None, min None, max None
+margin (top1-top2 logprob) at the split, in A: n/a
+margin (top1-top2 logprob) at the split, in B: n/a
+B's runner-up is A's pick at the split: 0/0
+K6 stage skip: steps 40960 copies 1274180 skipped 226676 (15.1 % of staged experts; last 64 steps: 717 / 120) audited 0 mismatch_words 0 swap_invalidations 12645 lanes 1 enabled 1
+K6 stage skip: steps 45056 copies 1342923 skipped 240402 (15.2 % of staged experts; last 64 steps: 1430 / 284) audited 0 mismatch_words 0 swap_invalidations 13487 lanes 1 enabled 1
+K6 stage skip: steps 49152 copies 1444831 skipped 256328 (15.1 % of staged experts; last 64 steps: 1868 / 209) audited 0 mismatch_words 0 swap_invalidations 13989 lanes 1 enabled 1
+K6 stage skip: steps 53248 copies 1615309 skipped 273406 (14.5 % of staged experts; last 64 steps: 3569 / 325) audited 0 mismatch_words 0 swap_invalidations 14325 lanes 1 enabled 1
+K6 stage skip: steps 57344 copies 2102660 skipped 296105 (12.3 % of staged experts; last 64 steps: 1890 / 712) audited 0 mismatch_words 0 swap_invalidations 14688 lanes 1 enabled 1
+K6 error lines: 0
+{"audit": 0, "audited": 0, "copied": 2191666, "copied_since": 1410, "enabled": true, "event": "stage_skip", "host_steps": 59968, "lanes": 1, "mismatch_words": 0, "skipped": 329289, "skipped_since": 617, "swap_invalidations": 15828
+after: ds41 Up 21 minutes, restarts 0, telemetry: {"at_boot": false, "cold": 3100, "cold_share": 0.028961136023916294, "drains": 937, "event": "drain", "freeze": false, "host_steps": 59968, "hot_moved": 719, "pending": 31, "queued": 31, "sel": 107040, "stale": 0, "steps": 64, "stream_changes": 0, "swaps": 158
+CELL_DONE fit302 04:33:19
+end 2026-11-19T04:33:19Z
+DONE

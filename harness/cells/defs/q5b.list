@@ -1,0 +1,11 @@
+# name|profile   (see station_cells.sh). Each cell is the 275-hot base plus one change. Ordered by expected value.
+base|c1
+h285u97|c1 s:2,4,8,16,32x2 pf id
+sd4|s:8,16,32x2
+sd5|s:8,16,32x2
+pf16k|pf c1 id
+k1f7|c1 id
+k1f3|c1 id
+h280|c1 s:8,32x2 pf id
+k1f5|c1 id
+k1f4|c1 id

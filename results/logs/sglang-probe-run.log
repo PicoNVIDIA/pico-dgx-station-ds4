@@ -1,0 +1,81 @@
+start 2026-11-19T02:35:27Z
+waiting for DONE in /raid/work/logs/gtq13-latest/run.log
+box free 03:08:27
+engine down: gpu 1 MiB; host used 46 GiB, free 315 GiB, cache 164 GiB
+== PULL 03:08:38
+pull rc=0 arch arm64 size 16.4 GB
+sglang 0.0.0.dev1+g6b374a550 torch 2.14.1+cu130 cuda 13.0 gpu NVIDIA GB300 (10, 3)
+== P0 megakernel at TP1 03:12:13
+P0: rc=1 (51 log lines)
+== P1 stock Paged Experts + Marlin 03:12:39
+  after cleanup: gpu 1 MiB; host used 44 GiB, free 243 GiB, cache 240 GiB
+P1: container exited after 480 s, exit code 0
+p1: log 114 lines; error lines:
+60:[2026-11-19 03:15:35 PID220] engram host table layer 1: replication=none, 96681 MiB resident, 76288 MiB in huge pages (79%)
+61:[2026-11-19 03:15:35 PID220] engram host table layer 14: replication=none, 96684 MiB resident, 96256 MiB in huge pages (100%)
+64:[2026-11-19 03:20:34 PID220] Paged experts: with --paged-experts-enable-disk, later starts would read these experts from /root/.cache/sglang/paged_experts (6.7 GiB) instead of loading and repacking them
+65:[2026-11-19 03:20:34 PID220] Scheduler hit an exception: Traceback (most recent call last):
+109:    raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+110:RuntimeError: MXFP4 Marlin requires SM90 or SM120.
+p1: last lines:
+    raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+RuntimeError: MXFP4 Marlin requires SM90 or SM120.
+
+[2026-11-19 03:20:34] Received sigquit from a child process. It usually means the child failed.
+[2026-11-19 03:20:34] kill_process_tree called: parent_pid=1, include_parent=True, pid=1
+[2026-11-19 03:20:34] kill_process_tree called: parent_pid=1, include_parent=False, pid=1
+  after cleanup: gpu 1 MiB; host used 44 GiB, free 390 GiB, cache 92 GiB
+== E2 Paged Experts + Marlin with the SM gate removed (NOT stock) 03:20:42
+E2: HEALTH 200 after 1294 s
+e2: log 161 lines; error lines:
+16:162:            raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+17:162:            pass  # sm_103 probe: gate removed
+61:[2026-11-19 03:23:14 PID281] engram host table layer 1: replication=none, 96681 MiB resident, 96256 MiB in huge pages (100%)
+62:[2026-11-19 03:23:14 PID281] engram host table layer 14: replication=none, 96684 MiB resident, 96256 MiB in huge pages (100%)
+105:[2026-11-19 03:28:11 PID281] Paged experts: with --paged-experts-enable-disk, later starts would read these experts from /root/.cache/sglang/paged_experts (268.9 GiB) instead of loading and repacking them
+146:/opt/sglang/lib/python3.12/site-packages/nvidia_cutlass_dsl/dsl_packages/cutlass/base_dsl/dsl.py:2300: UserWarning: Argument aux_data (position 18) cannot be converted to a JitArgument for function 'cutlass___call___sglangkernelsopsattentionflash_attncutef
+e2: last lines:
+[2026-11-19 03:42:15 PID281] Prefill batch, #new-seq: 1, #new-token: 193, #cached-token: 0, full token usage: 0.00, window_128 token usage: 0.01, #running-req: 0, #queue-req: 0, #pending-token: 0, cuda graph: False, input throughput (token/s): 2.07
+[2026-11-19 03:42:15] INFO:     127.0.0.1:38676 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-11-19 03:42:15] INFO:     127.0.0.1:59508 - "POST /freeze_gc HTTP/1.1" 200 OK
+[2026-11-19 03:42:15] The server is fired up and ready to roll!
+[2026-11-19 03:42:18 PID281] Prefill batch, #new-seq: 1, #new-token: 1, #cached-token: 0, full token usage: 0.00, window_128 token usage: 0.00, #running-req: 0, #queue-req: 0, #pending-token: 0, cuda graph: False, input throughput (token/s): 0.33
+[2026-11-19 03:42:18] INFO:     172.17.0.1:54630 - "GET /health HTTP/1.1" 200 OK
+E2 SERVES: host used 478 GiB, free 16 GiB, cache 270 GiB; gpu 226711 MiB
+smoke answer: '391'
+e2-fixed: bench_full rc=1
+        ~^^^^^^^^^^^
+KeyError: 'summary'
+e2-score: bench_full rc=1
+        ~^^^^^^^^^^^
+KeyError: 'summary'
+e2-after: log 166 lines; error lines:
+16:162:            raise RuntimeError("MXFP4 Marlin requires SM90 or SM120.")
+17:162:            pass  # sm_103 probe: gate removed
+61:[2026-11-19 03:23:14 PID281] engram host table layer 1: replication=none, 96681 MiB resident, 96256 MiB in huge pages (100%)
+62:[2026-11-19 03:23:14 PID281] engram host table layer 14: replication=none, 96684 MiB resident, 96256 MiB in huge pages (100%)
+105:[2026-11-19 03:28:11 PID281] Paged experts: with --paged-experts-enable-disk, later starts would read these experts from /root/.cache/sglang/paged_experts (268.9 GiB) instead of loading and repacking them
+146:/opt/sglang/lib/python3.12/site-packages/nvidia_cutlass_dsl/dsl_packages/cutlass/base_dsl/dsl.py:2300: UserWarning: Argument aux_data (position 18) cannot be converted to a JitArgument for function 'cutlass___call___sglangkernelsopsattentionflash_attncutef
+e2-after: last lines:
+[2026-11-19 03:42:18] INFO:     172.17.0.1:54630 - "GET /health HTTP/1.1" 200 OK
+[2026-11-19 03:42:37 PID281] Triton kernel '_hc_mix_reduce_sinkhorn_kernel' took 18.26 s to compile after serving started. Serving-time compilation can stall the engine; pre-compile it during engine init.
+[2026-11-19 03:42:43 PID281] Prefill batch, #new-seq: 1, #new-token: 17, #cached-token: 0, full token usage: 0.00, window_128 token usage: 0.01, #running-req: 0, #queue-req: 0, #pending-token: 0, cuda graph: False, input throughput (token/s): 0.68
+[2026-11-19 03:42:43] INFO:     172.17.0.1:54642 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+[2026-11-19 03:42:43] INFO:     172.17.0.1:40294 - "GET /metrics HTTP/1.1" 404 Not Found
+[2026-11-19 03:42:43] INFO:     172.17.0.1:40296 - "GET /metrics HTTP/1.1" 404 Not Found
+  after cleanup: gpu 1 MiB; host used 31 GiB, free 481 GiB, cache 1 GiB
+== F3 stock generic offload (--cpu-offload-gb 100) 03:42:51
+F3: container exited after 90 s, exit code 0
+f3: log 135 lines; error lines:
+60:[2026-11-19 03:44:14 PID214] Scheduler hit an exception: Traceback (most recent call last):
+131:torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 4.22 GiB. GPU 0 has a total capacity of 249.81 GiB of which 1.36 GiB is free. Including non-PyTorch memory, this process has 248.44 GiB memory in use. Of the allocated memory 247.52 GiB is alloc
+f3: last lines:
+           ^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 4.22 GiB. GPU 0 has a total capacity of 249.81 GiB of which 1.36 GiB is free. Including non-PyTorch memory, this process has 248.44 GiB memory in use. Of the allocated memory 247.52 GiB is allocated
+
+[2026-11-19 03:44:14] Received sigquit from a child process. It usually means the child failed.
+[2026-11-19 03:44:14] kill_process_tree called: parent_pid=1, include_parent=True, pid=1
+[2026-11-19 03:44:14] kill_process_tree called: parent_pid=1, include_parent=False, pid=1
+  after cleanup: gpu 1 MiB; host used 33 GiB, free 478 GiB, cache 3 GiB
+end 2026-11-19T03:44:23Z
+DONE

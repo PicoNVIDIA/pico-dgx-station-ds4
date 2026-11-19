@@ -1,0 +1,4 @@
+# ord3f and u99 are probes on the 262K final; score1m is the full public scoreboard on the 1M final.
+ord3f|c1 s:2,4,8,16,32x2 id
+u99|c1 s:8,32x2 id
+score1m|full id
