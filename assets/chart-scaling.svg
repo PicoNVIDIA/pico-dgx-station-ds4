@@ -31,10 +31,13 @@
 <text x="750.0" y="506.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#9b9b9b" text-anchor="middle">16</text>
 <text x="916.0" y="506.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#9b9b9b" text-anchor="middle">32</text>
 <text x="501.0" y="536.0" font-family="'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#9b9b9b" text-anchor="middle">users at once</text>
-<polyline fill="none" stroke="#474747" stroke-width="2.5" stroke-linejoin="round" stroke-dasharray="7 7" points="86.0,461.5 584.0,443.6 916.0,416.7"/>
-<circle cx="86.0" cy="461.5" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
-<circle cx="584.0" cy="443.6" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
-<circle cx="916.0" cy="416.7" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<polyline fill="none" stroke="#474747" stroke-width="2.5" stroke-linejoin="round" points="86.0,462.0 252.0,457.6 418.0,451.9 584.0,443.9 750.0,428.8 916.0,416.3"/>
+<circle cx="86.0" cy="462.0" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<circle cx="252.0" cy="457.6" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<circle cx="418.0" cy="451.9" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<circle cx="584.0" cy="443.9" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<circle cx="750.0" cy="428.8" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
+<circle cx="916.0" cy="416.3" r="4" fill="#474747" stroke="#0d0d0d" stroke-width="2"/>
 <polyline fill="none" stroke="#666666" stroke-width="2.5" stroke-linejoin="round" points="86.0,462.7 252.0,452.5 418.0,441.6 584.0,431.7 750.0,420.3 916.0,410.4"/>
 <circle cx="86.0" cy="462.7" r="4" fill="#666666" stroke="#0d0d0d" stroke-width="2"/>
 <circle cx="252.0" cy="452.5" r="4" fill="#666666" stroke="#0d0d0d" stroke-width="2"/>

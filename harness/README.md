@@ -27,6 +27,7 @@ The scripts also assume passwordless `sudo`, `tmux`, Docker with the NVIDIA runt
 |---|---|
 | `setup/station_prep.sh` | Directories, the checkpoint download, image pull, upstream clones at pinned commits |
 | `setup/station_stock_baseline.sh`, `setup/station_stock_bench.sh` | Boots stock vLLM with its own Station config and runs the benchmark on it |
+| `setup/station_stock_rerun.sh` | The warmed re-run of stock vLLM: full scoreboard, two more stream passes, the prompt sets and an identity capture |
 | `setup/station_pg61_build.sh` | Builds the engine tree. CPU only |
 | `setup/station_gt_prep.sh`, `setup/card-gt1-station.diff` | Layout shim for the missing second GPU card and the patch to the upstream launch card |
 | `setup/station_gt_boot.sh` | First boot of the one-GPU engine at the published settings |

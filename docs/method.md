@@ -38,7 +38,7 @@ All speeds are output tokens per second. Thinking tokens count as output.
 
 - At one user the engine repeats itself exactly: across runs, across hot-expert counts and after the manager has moved experts. So every one-user change in this repo is held to 40 of 40 identical against the reference capture (the public recipe at 275 experts).
 - With several requests in a batch the unmodified engine does not match its own one-at-a-time output: 5 of 40 when the prompts are sent 8 at a time, 3 of 40 at 32. Many-user configs are therefore judged on the quality stage, not on token identity.
-- Against stock vLLM v0.32.0, 3 of 40 answers have the same text. See `results/identity/stock-vs-engine.txt`. Stock vLLM matches itself on 40 of 40.
+- Against stock vLLM v0.32.0, 3 of 40 answers have the same text (`results/identity/stock-vs-engine.txt`). Stock vLLM matches itself on 40 of 40 inside one boot, and on the same 3 of 40 between two boots (`results/identity/stock-vs-stock.txt`). So this check does not separate the engine from stock's own variation between boots.
 
 ## Kernel patches
 

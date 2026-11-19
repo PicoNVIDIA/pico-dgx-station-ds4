@@ -1,0 +1,40 @@
+start 2026-11-19T19:57:10Z
+stock: up=1 after 5840 s; GPU KV cache size: 3,105,873 tokens, Maximum concurrency for 1,048,576 tokens per request: 2.96x
+max_model_len': 1048576, 'served_model_name': ['deepseek-v4.1-flash'];gpu_memory_utilization': 0.97, 'kv_cache_memory_bytes': 6442450944;cpu_offload_gb': 60.0, 'cpu_offload_params': ['routed_experts.w13_weight';max_num_seqs': 24, 'long_prefill_token_threshold': 6144;speculative_config': {'method': 'dspark', 'num_speculative_tokens': 5;
+
+SMOKE PASS
+stock-c1-r1-a: errors 0; decode tok/s 133.8 (20 timed); ms/step 20.248 tok/step 2.677 ms/token 7.564
+stock-c1-r1-b: errors 0; decode tok/s 132.15 (20 timed); ms/step 20.199 tok/step 2.639 ms/token 7.654
+stock-c1-r2-a: errors 0; decode tok/s 133.79 (20 timed); ms/step 20.25 tok/step 2.677 ms/token 7.565
+stock-c1-r2-b: errors 0; decode tok/s 132.17 (20 timed); ms/step 20.197 tok/step 2.639 ms/token 7.654
+stock-score: | fixed prompt (~2.6K in, 2,048 out, greedy, thinking off) | 167.8 (166.1-168.4) | 248 (245-260) | 3.50 (3.49-3.53) | 47.7 (47.6-47.7) | 5 |
+stock-score: | coding prompt (2,048 out, greedy, thinking off) | 171.2 (170.7-171.7) | 338 (337-338) | 3.69 (3.67-3.70) | 46.5 (46.5-46.6) | 5 |
+stock-score: | GSM8K decode, T=1.0, thinking on (60 s window) | 130.8 | — | 2.827 | — | window |
+stock-score: | GSM8K decode, greedy, thinking off (60 s window) | 157.8 | — | 3.397 | — | window |
+stock-score: | 2 | 171 | 85.4 | 2.878 | 60 |
+stock-score: | 4 | 200 | 49.9 | 2.663 | 60 |
+stock-score: | 8 | 278 | 34.7 | 2.785 | 60 |
+stock-score: | 16 | 397 | 24.8 | 2.782 | 60 |
+stock-score: | 32 | 505 | 15.8 | 2.859 | 60 |
+stock-score: | 14255 (14246-14258) | 527 (525-562) | 27034 (25476-27123) |
+stock-score: | 56837 (56816-56892) | 1987 (1985-1991) | 28606 (28574-28618) |
+stock-score: | 113691 (113681-113696) | 4030 (4023-4034) | 28210 (28180-28262) |
+stock-score: | GSM8K-200 (thinking on, T=0.3) | 193/200 (96.5 %) |
+stock-score: | needles at 200K tokens | 3/3 |
+stock-score: GPU KV cache: ? tokens. 16 distinct ~110,000-token contexts decoding 2,500 forced tokens each, plus one needle request: all ran at once (max running 17.0, max waiting 15.0), 0 preemptions, peak KV use 56 %, wall 146.8 s, all requests correct.
+stock-score: | tool call | PASS |
+stock-streams-r1: | 2 | 172 | 85.9 | 2.904 | 60 |
+stock-streams-r1: | 4 | 210 | 52.6 | 2.771 | 60 |
+stock-streams-r1: | 8 | 283 | 35.4 | 2.822 | 60 |
+stock-streams-r1: | 16 | 402 | 25.1 | 2.887 | 60 |
+stock-streams-r1: | 32 | 502 | 15.7 | 2.823 | 60 |
+stock-streams-r2: | 2 | 163 | 81.3 | 2.675 | 60 |
+stock-streams-r2: | 4 | 217 | 54.2 | 2.879 | 60 |
+stock-streams-r2: | 8 | 274 | 34.2 | 2.762 | 60 |
+stock-streams-r2: | 16 | 403 | 25.2 | 2.837 | 60 |
+stock-streams-r2: | 32 | 506 | 15.8 | 2.831 | 60 |
+captured 40/40 prompts, 9118 tokens with logprobs, concurrency 1, 73s -> /raid/work/ident/stock-v032-run3.json
+stock run3 against run1 (another boot): identical outputs: 3/40; matching prefix 1724/9245 tokens (18.6 %)
+server log error lines: 0; restarts 0
+end 2026-11-19T22:11:52Z
+DONE

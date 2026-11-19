@@ -47,6 +47,6 @@ Everything measured on one Station on 18 and 19 November 2026. "Same output" mea
 
 | Engine | Result | Evidence |
 |---|---|---|
-| Stock vLLM v0.32.0, its own Station config | 177.8 tok/s for one user on the code prompt, 501 at 32 users (one run, 24 requests at once) | `results/raw/stock-vllm/` |
+| Stock vLLM v0.32.0, its own Station config | 167.8 to 177.8 tok/s for one user on the code prompt, 504 at 32 users (two boots, 24 requests at once). GSM8K-200 193 of 200 | `results/raw/stock-vllm/` |
 | Stock SGLang (nightly `6b374a55`) | does not load: its CPU-memory expert tier raises `MXFP4 Marlin requires SM90 or SM120` after loading for eight minutes, and generic CPU offload runs out of GPU memory. Its four-GPU kernel path crashed in argument checking at one GPU | `results/logs/sglang-probe-run.log` and the three `sglang-probe-*-tail.log` files |
 | SGLang with that one check removed | loads without the draft model: 135.6 tok/s for one user, 552 at 32 users, GSM8K-200 195 of 200 | `results/raw/sglang-patched/`, `harness/sglang/sglang_e2_entry.sh` |

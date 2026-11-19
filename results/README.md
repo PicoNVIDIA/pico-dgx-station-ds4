@@ -14,7 +14,7 @@
 
 | Directory in `raw/` | Column | Files |
 |---|---|---|
-| `stock-vllm/` | Stock vLLM v0.32.0 | one benchmark session (one user, 8 and 32 users) |
+| `stock-vllm/` | Stock vLLM v0.32.0 | `bench-dsv41-gb300-alone`: the first boot, one session (one user, 8 and 32 users). `stock-score`, `stock-streams-r1`, `-r2`: the second boot, warmed, with the full scoreboard and two more stream passes |
 | `sglang-patched/` | SGLang nightly with one line changed | `w-*`: code prompt and stream windows counted at the client, two passes. `a-*`: coding prompt, prefill, quality |
 | `public-recipe-275/` | Public one-GPU recipe on our box | `score-gt275`: the full scoreboard. `ctl-streams2-r1`, `-r2`: the two warmed stream passes behind the stream rows |
 | `this-recipe-1m/` | This recipe, 1M context | full scoreboard |
@@ -30,7 +30,7 @@
 |---|---|
 | Same output on 40 of 40 prompts for a config | `grep "vs reference" logs/*.log` (one line per boot) |
 | The public recipe at its published 255 experts reproduces on this box: 263.7 and 263.0 tok/s | `logs/gt1-first-boot-card.log`, lines 34 and 35 |
-| One user on the 40 mixed prompts | lines `<cell>-c1-r1-a` and `-b` in the run logs: `ctl` (public recipe, queue 4), `f1m`, `f524`, `f262` (queue 8). Stock vLLM: `logs/stock-vllm-bench-run.log` |
+| One user on the 40 mixed prompts | lines `<cell>-c1-r1-a` and `-b` in the run logs: `ctl` (public recipe, queue 4), `f1m`, `f524`, `f262` (queue 8). Stock vLLM: `logs/stock-vllm-bench-run.log` and `logs/stock-vllm-rerun-run.log` |
 | Skip patch byte audit: 217,623 skips, 0 differing words | `logs/gtq7-run.log` (the last `stage_skip` event), verdict in `logs/gtq7-gate.log` |
 | 10-minute mixed-load soak of the speed profile, 1,118 sampled skips | `logs/gtq12-run.log`, cell `soak262` |
 | 3.5-hour soak of the default profile, 14,526 sampled skips | `logs/gtq21-run.log`, cell `soak1m`. One sample a minute in `logs/gtq21-soak-mem.csv`: time (UTC), GPU MiB used, host MiB used, host MiB available, container restarts |
@@ -48,6 +48,8 @@
 | Where the time goes in a step | `profiles/profc-table.txt` (code prompt), `profiles/profg-table.txt` (general prompt) |
 | Cost of the packed-scale kernel | `profiles/profk0-table.txt`, `profkb-table.txt`, `profkp-table.txt` |
 | Output against stock vLLM | `identity/stock-vs-engine.txt`; the captures are in `identity/captures/` |
+| Stock vLLM against itself, inside one boot and between two boots | `identity/stock-vs-stock.txt` |
+| Stock vLLM re-run, warmed: speeds and the accuracy checks | `logs/stock-vllm-rerun-run.log`, `raw/stock-vllm/stock-score.md` |
 | Cold experts copied per layer call, by number of users | `analysis/stage-log-analysis-285.txt` |
 
 Cells that failed to boot are in these logs too (`NOT SERVING`, `FAILED_BOOT`). One hardware identifier, the GPU's UUID, is redacted in `logs/gt1-first-boot-card.log`; nothing else in the logs was edited.
@@ -59,6 +61,6 @@ To re-check an identity result from the captures: `python3 harness/identity/iden
 - The benchmark's header line shows `?` for image, driver and commit: our runs did not pass those fields to it. The values are in `summary.json` under `meta` and in `PINS.md`.
 - Stream rows in `score-gt275` are the first stream pass after that boot and read 0 to 3.5% under the two later passes. The public recipe's stream numbers in the README are the mean of those two later passes.
 - A range in the README is the lowest and highest value across boots or passes of one config. The single value in a scoreboard file is one session.
-- The stock vLLM stream rows were run once. They read 14% under the published numbers for that config (326 at 8 users, 584 at 32).
+- The stock vLLM stream rows read 14% under the published numbers for that config (326 at 8 users, 584 at 32) in both boots.
 - The benchmark labels its capacity contexts 110K and its needle prompt 200K. By the token counts in the raw files they are 95K and 174K.
 - The two-GPU reference numbers in `summary.json` are Garner McCloud's published figures. We did not measure them.

@@ -1,0 +1,52 @@
+# stock vLLM v0.32.0 against itself: twice in one boot, and between two boots
+# run1 and run2 were captured in the first boot (2026-11-18), run3 in the second (2026-11-19). Same container, same flags.
+## one boot (run1 against run2): ident_cmp.py
+A=deepseek-v4.1-flash  B=deepseek-v4.1-flash  prompts compared 40, errors A 0 B 0
+identical outputs: 40/40; matching prefix 9155/9155 tokens (100.0 %)
+## two boots (run1 against run3): ident_cmp.py
+A=deepseek-v4.1-flash  B=deepseek-v4.1-flash  prompts compared 40, errors A 0 B 0
+identical outputs: 3/40; matching prefix 1724/9245 tokens (18.6 %)
+  A00: first difference at token 10 (lengths 256/256); top1-top2 margin in A 0.5; A=' collections' B=' __'
+  A02: first difference at token 9 (lengths 256/256); top1-top2 margin in A 0.25; A=' in' B=' ('
+  A03: first difference at token 165 (lengths 179/179); top1-top2 margin in A 0.0; A='5' B='6'
+  A04: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.125; A='.\n\n' B='.'
+  A05: first difference at token 3 (lengths 256/256); top1-top2 margin in A 0.0; A=' through' B=' step'
+  A06: first difference at token 1 (lengths 256/256); top1-top2 margin in A 1.5; A=' ' B=' main'
+  A07: first difference at token 7 (lengths 256/256); top1-top2 margin in A 1.0; A='S' B='serv'
+  A08: first difference at token 89 (lengths 169/160); top1-top2 margin in A 0.5; A='no' B='p'
+  A09: first difference at token 16 (lengths 231/211); top1-top2 margin in A 0.125; A=' a' B=' shr'
+  A10: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.0; A='\n' B=' `'
+  A11: first difference at token 31 (lengths 256/256); top1-top2 margin in A 1.25; A=' the' B=' a'
+  A12: first difference at token 40 (lengths 256/256); top1-top2 margin in A 0.0; A=')' B=')—'
+  A13: first difference at token 80 (lengths 256/256); top1-top2 margin in A 1.0; A='dates' B='date'
+  A14: first difference at token 37 (lengths 256/256); top1-top2 margin in A 0.25; A=' pr' B=' between'
+  A15: first difference at token 16 (lengths 141/141); top1-top2 margin in A 0.125; A=' touched' B=' settled'
+  A16: first difference at token 75 (lengths 256/256); top1-top2 margin in A 0.25; A='\\[' B='$$'
+  A18: first difference at token 3 (lengths 235/190); top1-top2 margin in A 2.25; A=' offers' B=' lets'
+  A19: first difference at token 2 (lengths 256/256); top1-top2 margin in A 0.25; A=' this' B=' the'
+  B00: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.25; A=' stored' B=' "'
+  B01: first difference at token 132 (lengths 256/256); top1-top2 margin in A 0.5; A=' Buff' B=' A'
+  B02: first difference at token 5 (lengths 256/256); top1-top2 margin in A 0.625; A=' Who' B=' Wh'
+  B03: first difference at token 5 (lengths 213/221); top1-top2 margin in A 0.5; A='Upper' B='C'
+  B04: first difference at token 66 (lengths 256/256); top1-top2 margin in A 0.375; A=' Strict' B=' Fail'
+  B05: first difference at token 10 (lengths 256/256); top1-top2 margin in A 0.0; A='##' B='**'
+  B06: first difference at token 29 (lengths 256/256); top1-top2 margin in A 0.0; A=' production' B=' spread'
+  B07: first difference at token 32 (lengths 256/256); top1-top2 margin in A 1.0; A='12' B='8'
+  B08: first difference at token 2 (lengths 220/228); top1-top2 margin in A 0.0; A=':' B=':**'
+  B09: first difference at token 10 (lengths 213/201); top1-top2 margin in A 1.25; A=',' B=' sound'
+  B10: first difference at token 203 (lengths 256/256); top1-top2 margin in A 0.0; A=' **' B=' reversed'
+  B11: first difference at token 6 (lengths 256/256); top1-top2 margin in A 0.25; A=' is' B=' ('
+  B12: first difference at token 62 (lengths 256/256); top1-top2 margin in A 0.5; A=' That' B=' Most'
+  B13: first difference at token 4 (lengths 171/234); top1-top2 margin in A 0.5; A=' for' B=' –'
+  B14: first difference at token 27 (lengths 256/256); top1-top2 margin in A 0.0; A=' strict' B=' SQL'
+  B15: first difference at token 1 (lengths 191/150); top1-top2 margin in A 0.125; A=' hour' B=' dark'
+  B16: first difference at token 80 (lengths 256/256); top1-top2 margin in A 0.75; A=' isn' B=' is'
+  B18: first difference at token 27 (lengths 216/227); top1-top2 margin in A 0.5; A=' by' B=' rather'
+  B19: first difference at token 38 (lengths 256/256); top1-top2 margin in A 0.125; A=' scheduled' B=' que'
+## two boots (run1 against run3): ident_diag.py
+prompts 40; same prompt_tokens 40/40; same visible text 3/40 ['A01', 'A17', 'B17']
+real divergences 37; first-difference position median 27, min 1, max 203
+margin (top1-top2 logprob) at the split, in A: n=37 median 0.250 max 2.250; <=0.125: 14, 0.25-0.5: 14, 0.625-1.0: 5, 1.1-2.0: 3, >2.0: 1
+margin (top1-top2 logprob) at the split, in B: n=37 median 0.250 max 1.250; <=0.125: 11, 0.25-0.5: 16, 0.625-1.0: 7, 1.1-2.0: 3, >2.0: 0
+B's runner-up is A's pick at the split: 36/37
+smallest distinct |logprob| values in A (shows the logprob grid): [0.0, 0.001, 0.002, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.011, 0.012, 0.015]

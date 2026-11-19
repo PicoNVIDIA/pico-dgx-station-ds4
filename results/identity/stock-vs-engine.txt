@@ -54,3 +54,14 @@ identical outputs: 40/40; matching prefix 9155/9155 tokens (100.0 %)
 ## the engine against itself (two captures at 275 experts)
 A=dsv41-flash-gracetier  B=dsv41-flash-gracetier  prompts compared 40, errors A 0 B 0
 identical outputs: 40/40; matching prefix 9202/9202 tokens (100.0 %)
+# the same comparison against the second stock boot (run3, A) and the engine reference (B)
+## ident_cmp.py
+A=deepseek-v4.1-flash  B=dsv41-flash-gracetier  prompts compared 40, errors A 0 B 0
+identical outputs: 1/40; matching prefix 1387/9268 tokens (15.0 %)
+## ident_diag.py
+prompts 40; same prompt_tokens 40/40; same visible text 4/40 ['A01', 'A03', 'A17', 'B17']
+real divergences 36; first-difference position median 16, min 1, max 76
+margin (top1-top2 logprob) at the split, in A: n=36 median 0.500 max 1.750; <=0.125: 9, 0.25-0.5: 11, 0.625-1.0: 12, 1.1-2.0: 4, >2.0: 0
+margin (top1-top2 logprob) at the split, in B: n=36 median 0.375 max 3.000; <=0.125: 8, 0.25-0.5: 18, 0.625-1.0: 6, 1.1-2.0: 2, >2.0: 2
+B's runner-up is A's pick at the split: 34/36
+smallest distinct |logprob| values in A (shows the logprob grid): [0.0, 0.001, 0.002, 0.003, 0.005, 0.007, 0.008, 0.009, 0.01, 0.011, 0.012, 0.013]

@@ -34,7 +34,7 @@ Everything else on the GPU (attention and dense weights, the draft model, the ou
 
 ## What the public recipe already does
 
-Garner McCloud's engine is a set of fused components and kernels for this model, loaded over the stock vLLM v0.31.0 container. James Meadlock's expert tier ("gracetier") adds the hot and cold split for a single GPU, and a manager that counts which experts are picked and exchanges hot and cold experts between steps to follow the traffic. On this box that public recipe runs at 2.1 to 2.9 times stock vLLM for one user, depending on the prompts, and 3.9 times at 32 users.
+Garner McCloud's engine is a set of fused components and kernels for this model, loaded over the stock vLLM v0.31.0 container. James Meadlock's expert tier ("gracetier") adds the hot and cold split for a single GPU, and a manager that counts which experts are picked and exchanges hot and cold experts between steps to follow the traffic. On this box that public recipe runs at 2.1 to 3.0 times stock vLLM for one user, depending on the prompts, and 3.9 times at 32 users.
 
 Garner McCloud's fastest published recipe uses a second GPU card (an RTX PRO 6000) to compute the cold experts. That removes the copies. The Station we measured on has no such card.
 
